@@ -22,6 +22,7 @@ public class OrbitSketch extends PApplet {
   private static final int SLIDER_HANDLE_RADIUS = 8;
   private static final Button PAUSE_BUTTON = new Button(16, CONTROL_Y, ControlAction.PAUSE);
   private static final Button RESTART_BUTTON = new Button(124, CONTROL_Y, ControlAction.RESTART);
+  private static final Slider SPEED_SLIDER = new Slider(SLIDER_X, SLIDER_Y, SLIDER_WIDTH, SLIDER_HANDLE_RADIUS);
   private static final List<Button> BUTTONS = List.of(PAUSE_BUTTON, RESTART_BUTTON);
 
   private OrbitSimulator simulator;
@@ -56,14 +57,16 @@ public class OrbitSketch extends PApplet {
 
   @Override
   public void mousePressed() {
-    if (insideSlider()) {
-      simulator.setSpeedMultiplier(speedFromMouse());
-      return;
-    }
     BUTTONS.stream()
         .filter(button -> button.contains(mouseX, mouseY))
         .findFirst()
-        .ifPresent(button -> button.press(simulator));
+        .ifPresentOrElse(button -> button.press(simulator), this::pressSlider);
+  }
+
+  private void pressSlider() {
+    if (SPEED_SLIDER.contains(mouseX, mouseY)) {
+      simulator.setSpeedMultiplier(SPEED_SLIDER.speedFrom(mouseX, this));
+    }
   }
 
   private void fillFor(String color) {
@@ -88,32 +91,13 @@ public class OrbitSketch extends PApplet {
 
   private void drawSpeedSlider() {
     stroke(180);
-    line(SLIDER_X, SLIDER_Y, SLIDER_X + SLIDER_WIDTH, SLIDER_Y);
-    float handleX = sliderPosition(simulator.speedMultiplier());
+    line(SPEED_SLIDER.x, SPEED_SLIDER.y, SPEED_SLIDER.endX(), SPEED_SLIDER.y);
     fill(245);
     stroke(80);
-    ellipse(handleX, SLIDER_Y, SLIDER_HANDLE_RADIUS * 2f, SLIDER_HANDLE_RADIUS * 2f);
+    ellipse(SPEED_SLIDER.positionFor(simulator.speedMultiplier()), SPEED_SLIDER.y, SPEED_SLIDER.diameter(), SPEED_SLIDER.diameter());
     fill(245);
     textAlign(LEFT, CENTER);
-    text(simulator.speedLabel(), SLIDER_X + SLIDER_WIDTH + 16, SLIDER_Y);
-  }
-
-  private float sliderPosition(int speed) {
-    float range = OrbitSimulator.MAXIMUM_SPEED - OrbitSimulator.MINIMUM_SPEED;
-    float fraction = (speed - OrbitSimulator.MINIMUM_SPEED) / range;
-    return SLIDER_X + fraction * SLIDER_WIDTH;
-  }
-
-  private boolean insideSlider() {
-    return mouseX >= SLIDER_X
-        && mouseX <= SLIDER_X + SLIDER_WIDTH
-        && Math.abs(mouseY - SLIDER_Y) <= SLIDER_HANDLE_RADIUS * 2;
-  }
-
-  private int speedFromMouse() {
-    float fraction = constrain((mouseX - SLIDER_X) / (float) SLIDER_WIDTH, 0, 1);
-    int range = OrbitSimulator.MAXIMUM_SPEED - OrbitSimulator.MINIMUM_SPEED;
-    return OrbitSimulator.MINIMUM_SPEED + Math.round(fraction * range);
+    text(simulator.speedLabel(), SPEED_SLIDER.labelX(), SPEED_SLIDER.y);
   }
 
   private record Paint(int red, int green, int blue) {
@@ -141,6 +125,36 @@ public class OrbitSketch extends PApplet {
 
     float centerY() {
       return y + BUTTON_HEIGHT / 2f;
+    }
+  }
+
+  private record Slider(int x, int y, int width, int handleRadius) {
+    boolean contains(int pointX, int pointY) {
+      return pointX >= x && pointX <= endX() && Math.abs(pointY - y) <= handleRadius * 2;
+    }
+
+    int speedFrom(int mouseX, PApplet sketch) {
+      float fraction = sketch.constrain((mouseX - x) / (float) width, 0, 1);
+      int range = OrbitSimulator.MAXIMUM_SPEED - OrbitSimulator.MINIMUM_SPEED;
+      return OrbitSimulator.MINIMUM_SPEED + Math.round(fraction * range);
+    }
+
+    float positionFor(int speed) {
+      float range = OrbitSimulator.MAXIMUM_SPEED - OrbitSimulator.MINIMUM_SPEED;
+      float fraction = (speed - OrbitSimulator.MINIMUM_SPEED) / range;
+      return x + fraction * width;
+    }
+
+    int endX() {
+      return x + width;
+    }
+
+    int diameter() {
+      return handleRadius * 2;
+    }
+
+    int labelX() {
+      return endX() + 16;
     }
   }
 
