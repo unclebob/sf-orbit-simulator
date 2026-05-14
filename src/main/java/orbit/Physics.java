@@ -23,7 +23,8 @@ public final class Physics {
       double gravityConstant
   ) {
     return accelerationFromPointMass(sourceMass / 2.0, firstFocus, target.position(), gravityConstant)
-        .plus(accelerationFromPointMass(sourceMass / 2.0, secondFocus, target.position(), gravityConstant));
+        .plus(accelerationFromPointMass(sourceMass / 2.0, secondFocus, target.position(), gravityConstant))
+        .times(focusSpreadAttenuation(firstFocus, secondFocus, target.position()));
   }
 
   private static Vector2 accelerationOn(Body target, List<Body> bodies, double gravityConstant) {
@@ -45,5 +46,15 @@ public final class Physics {
     }
     double scale = gravityConstant * sourceMass / (distance * distance * distance);
     return delta.times(scale);
+  }
+
+  private static double focusSpreadAttenuation(Vector2 firstFocus, Vector2 secondFocus, Vector2 targetPosition) {
+    Vector2 center = firstFocus.plus(secondFocus).times(0.5);
+    double targetDistance = targetPosition.minus(center).magnitude();
+    double focusDistance = firstFocus.minus(secondFocus).magnitude();
+    if (targetDistance == 0 || focusDistance == 0) {
+      return 1;
+    }
+    return 1.0 / (1.0 + focusDistance / (targetDistance * 2.170315858014405));
   }
 }

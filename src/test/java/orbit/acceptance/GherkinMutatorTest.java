@@ -181,7 +181,7 @@ class GherkinMutatorTest {
   void filtersCollisionSetupValuesThatDoNotAffectTheAssertedOutcome() {
     List<String> paths = mutationPaths(
         scenario(
-            "Bodies outside collision range remain separate",
+            "Bodies whose rendered edges do not touch remain separate",
             Map.ofEntries(
                 Map.entry("first_body", "alpha"),
                 Map.entry("first_color", "blue"),
@@ -200,7 +200,7 @@ class GherkinMutatorTest {
             )
         ),
         scenario(
-            "Colliding bodies merge into one body",
+            "Bodies merge when their rendered edges touch on screen",
             Map.of(
                 "first_body", "alpha",
                 "first_color", "blue",
@@ -213,7 +213,7 @@ class GherkinMutatorTest {
     );
 
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_body")));
-    assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_radius_px")));
+    assertTrue(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_radius_px")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".second_x")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".second_vx")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_x")));

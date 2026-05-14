@@ -42,6 +42,18 @@ public class OrbitStepHandlers implements StepHandlers {
       ),
       Map.entry("tidal deformation is calculated", this::calculateTidalDeformation),
       Map.entry(
+          "tidal deformation is calculated by integrating gravity over <sample_count> body samples using gravity constant <gravity_constant>",
+          this::calculateIntegratedTidalDeformation
+      ),
+      Map.entry(
+          "the integrated tidal stretch vector of <body> is <stretch_x>, <stretch_y>",
+          this::assertTidalStretchVector
+      ),
+      Map.entry(
+          "the integrated tidal stretch magnitude of <body> is <stretch_magnitude>",
+          this::assertTidalStretchMagnitude
+      ),
+      Map.entry(
           "the body <body> is rendered as an ellipse centered at <x>, <y> with major radius <major_radius_px>, minor radius <minor_radius_px>, and major axis pointing toward <source_body>",
           this::assertTidalEllipse
       ),
@@ -226,6 +238,7 @@ public class OrbitStepHandlers implements StepHandlers {
           this::assertBodyOrbitsCenter
       ),
       Map.entry("collisions are resolved", (world, example) -> world.simulator.resolveCollisions()),
+      Map.entry("screen collisions are resolved using rendered body edges", (world, example) -> world.simulator.resolveCollisions()),
       Map.entry(
           "the body <first_body> has position <first_x>, <first_y> and velocity <first_vx>, <first_vy>",
           (world, example) -> assertPrefixedBodyState(world, example, "first")
@@ -237,6 +250,14 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry(
           "the original body centers were within collision radius <collision_radius_px>",
           this::assertOriginalCollisionRadius
+      ),
+      Map.entry(
+          "the original rendered body centers were <screen_distance_px> pixels apart",
+          this::assertOriginalScreenDistance
+      ),
+      Map.entry(
+          "the original rendered body edges were touching at screen distance <touch_distance_px>",
+          this::assertOriginalTouchDistance
       ),
       Map.entry(
           "the merged body has color <merged_color>, radius <merged_radius_px>, mass <merged_mass>, position <merged_x>, <merged_y>, and velocity <merged_vx>, <merged_vy>",
@@ -330,6 +351,26 @@ public class OrbitStepHandlers implements StepHandlers {
     world.tidalDeformation = TidalDeformation.calculate(world.tidalBody, world.tidalSource, number(example, "elasticity"));
   }
 
+  private void calculateIntegratedTidalDeformation(World world, Map<String, String> example) {
+    world.tidalDeformation = TidalDeformation.calculate(
+        world.tidalBody,
+        world.tidalSource,
+        number(example, "elasticity"),
+        (int) number(example, "sample_count"),
+        number(example, "gravity_constant")
+    );
+  }
+
+  private void assertTidalStretchVector(World world, Map<String, String> example) {
+    assertEquals(text(example, "body"), world.tidalDeformation.bodyName());
+    assertVector(world.tidalDeformation.stretchVector(), example, "stretch_x", "stretch_y");
+  }
+
+  private void assertTidalStretchMagnitude(World world, Map<String, String> example) {
+    assertEquals(text(example, "body"), world.tidalDeformation.bodyName());
+    assertNumber(example, "stretch_magnitude", world.tidalDeformation.stretchMagnitude());
+  }
+
   private void assertTidalEllipse(World world, Map<String, String> example) {
     TidalDeformation deformation = world.tidalDeformation;
     assertEquals(text(example, "body"), deformation.bodyName());
@@ -361,6 +402,8 @@ public class OrbitStepHandlers implements StepHandlers {
         "",
         new Vector2(0, 0),
         0,
+        0,
+        new Vector2(0, 0),
         0,
         new Vector2(1, 0),
         position(example, "first_focus_x", "first_focus_y"),
@@ -479,6 +522,20 @@ public class OrbitStepHandlers implements StepHandlers {
     double originalDistance = world.firstCollisionBody.position().minus(world.secondCollisionBody.position()).magnitude();
     assertNumber(example, "collision_radius_px", collisionRadius);
     assertTrue(originalDistance <= collisionRadius, "original bodies should be within collision radius");
+  }
+
+  private void assertOriginalScreenDistance(World world, Map<String, String> example) {
+    assertNumber(example, "screen_distance_px", originalRenderedCenterDistance(world));
+  }
+
+  private void assertOriginalTouchDistance(World world, Map<String, String> example) {
+    double touchDistance = world.firstCollisionBody.radiusPixels() + world.secondCollisionBody.radiusPixels();
+    assertNumber(example, "touch_distance_px", touchDistance);
+    assertNumber(example, "touch_distance_px", originalRenderedCenterDistance(world));
+  }
+
+  private double originalRenderedCenterDistance(World world) {
+    return world.firstCollisionBody.position().minus(world.secondCollisionBody.position()).magnitude();
   }
 
   private void assertMergedBody(World world, Map<String, String> example) {

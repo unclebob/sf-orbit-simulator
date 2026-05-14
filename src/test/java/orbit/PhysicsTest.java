@@ -146,13 +146,16 @@ class PhysicsTest {
     Body earth = new Body("earth", "blue", 12, 100, new Vector2(220, 0), new Vector2(0, 0));
     Body sun = new Body("sun", "yellow", 36, 2000, new Vector2(0, 0), new Vector2(0, 0));
 
-    TidalDeformation deformation = TidalDeformation.calculate(earth, sun, 0.2);
+    TidalDeformation deformation = TidalDeformation.calculate(earth, sun, 0.6, 32, 1);
 
-    assertEquals(14, deformation.majorRadiusPixels(), 0.000001);
-    assertEquals(10, deformation.minorRadiusPixels(), 0.000001);
+    assertEquals(-0.906446, deformation.stretchVector().x(), 0.000001);
+    assertEquals(0, deformation.stretchVector().y(), 0.000001);
+    assertEquals(0.906446, deformation.stretchMagnitude(), 0.000001);
+    assertEquals(18, deformation.majorRadiusPixels(), 0.000001);
+    assertEquals(6, deformation.minorRadiusPixels(), 0.000001);
     assertEquals(-1, deformation.axisTowardSource().x(), 0.000001);
-    assertEquals(210.202, deformation.firstFocus().x(), 0.001);
-    assertEquals(229.798, deformation.secondFocus().x(), 0.001);
+    assertEquals(203.029, deformation.firstFocus().x(), 0.001);
+    assertEquals(236.971, deformation.secondFocus().x(), 0.001);
   }
 
   @Test
@@ -161,19 +164,19 @@ class PhysicsTest {
 
     Vector2 acceleration = Physics.accelerationFromElasticBody(
         100,
-        new Vector2(210.202, 0),
-        new Vector2(229.798, 0),
+        new Vector2(203.029, 0),
+        new Vector2(236.971, 0),
         moon,
         1
     );
 
-    assertEquals(-0.060019, acceleration.x(), 0.000001);
+    assertEquals(-0.060416, acceleration.x(), 0.000001);
     assertEquals(0, acceleration.y(), 0.000001);
   }
 
   @Test
   void collidingBodiesMergeWithConservedMassAreaMomentumAndCenterOfMass() {
-    OrbitSimulator simulator = collisionSimulator(2, 4, -2);
+    OrbitSimulator simulator = collisionSimulator(2, 7, -2);
 
     simulator.resolveCollisions();
 
@@ -181,7 +184,7 @@ class PhysicsTest {
     assertEquals("blue", merged.color());
     assertEquals(5, merged.radiusPixels(), 0.000001);
     assertEquals(4, merged.mass(), 0.000001);
-    assertEquals(1, merged.position().x(), 0.000001);
+    assertEquals(1.75, merged.position().x(), 0.000001);
     assertEquals(0, merged.position().y(), 0.000001);
     assertEquals(1, merged.velocity().x(), 0.000001);
     assertEquals(0, merged.velocity().y(), 0.000001);
@@ -214,7 +217,7 @@ class PhysicsTest {
   void bodiesOutsideLargerRadiusDoNotMerge() {
     OrbitSimulator simulator = new OrbitSimulator(List.of(
         new Body("alpha", "blue", 4, 3, new Vector2(0, 0), new Vector2(2, 0)),
-        new Body("beta", "gray", 3, 1, new Vector2(5, 0), new Vector2(-2, 0))
+        new Body("beta", "gray", 3, 1, new Vector2(8, 0), new Vector2(-2, 0))
     ));
 
     simulator.resolveCollisions();

@@ -54,6 +54,23 @@ public class GherkinMutator {
       "second_body",
       "second_color"
   );
+  private static final Set<String> EQUIVALENT_SCREEN_SEPARATE_COLLISION_KEYS = Set.of(
+      "first_body",
+      "first_color",
+      "first_mass",
+      "first_vx",
+      "first_vy",
+      "first_x",
+      "first_y",
+      "second_body",
+      "second_color",
+      "second_mass",
+      "second_radius_px",
+      "second_vx",
+      "second_vy",
+      "second_x",
+      "second_y"
+  );
   private static final Set<String> EQUIVALENT_RADIUS_CORRELATION_KEYS = Set.of(
       "larger_body",
       "larger_mass",
@@ -87,7 +104,9 @@ public class GherkinMutator {
       Map.entry("Elastic body gravity is split between ellipse foci", EQUIVALENT_ELASTIC_GRAVITY_KEYS),
       Map.entry("Dragging a body previews its velocity change", EQUIVALENT_VELOCITY_PREVIEW_KEYS),
       Map.entry("Bodies outside collision range remain separate", EQUIVALENT_SEPARATE_COLLISION_KEYS),
-      Map.entry("Colliding bodies merge into one body", EQUIVALENT_MERGED_COLLISION_KEYS)
+      Map.entry("Bodies whose rendered edges do not touch remain separate", EQUIVALENT_SCREEN_SEPARATE_COLLISION_KEYS),
+      Map.entry("Colliding bodies merge into one body", EQUIVALENT_MERGED_COLLISION_KEYS),
+      Map.entry("Bodies merge when their rendered edges touch on screen", EQUIVALENT_MERGED_COLLISION_KEYS)
   );
 
   private final ValueMutator valueMutator = new ValueMutator();

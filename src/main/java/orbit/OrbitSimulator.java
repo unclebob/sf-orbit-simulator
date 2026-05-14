@@ -187,7 +187,7 @@ public class OrbitSimulator {
 
   private boolean areColliding(Body first, Body second) {
     double distance = first.position().minus(second.position()).magnitude();
-    return distance <= Math.max(first.radiusPixels(), second.radiusPixels());
+    return distance <= first.radiusPixels() + second.radiusPixels();
   }
 
   private Body merge(Body first, Body second) {
