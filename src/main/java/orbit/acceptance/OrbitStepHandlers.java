@@ -164,6 +164,10 @@ public class OrbitStepHandlers implements StepHandlers {
           this::scrollViewCenter
       ),
       Map.entry(
+          "the orbit area receives horizontal scroll input <scroll_x> with scroll scale <scroll_scale>",
+          this::scrollViewCenterHorizontally
+      ),
+      Map.entry(
           "the empty orbit area is clicked at position <x>, <y> using gravity constant <gravity_constant>",
           (world, example) -> world.addedBody = world.simulator.addBodyInCircularOrbit(position(example, "x", "y"), "sun", number(example, "gravity_constant"))
       ),
@@ -399,6 +403,11 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private void scrollViewCenter(World world, Map<String, String> example) {
     Vector2 scroll = position(example, "scroll_x", "scroll_y");
+    world.viewCenter = world.viewCenter.plus(scroll.times(number(example, "scroll_scale")));
+  }
+
+  private void scrollViewCenterHorizontally(World world, Map<String, String> example) {
+    Vector2 scroll = new Vector2(number(example, "scroll_x"), 0);
     world.viewCenter = world.viewCenter.plus(scroll.times(number(example, "scroll_scale")));
   }
 
