@@ -2,7 +2,9 @@ Feature: 2D orbit simulator
 
   The simulator shows a sun, an earth, and a moon in a two-dimensional
   scene. Each body has mass, position, and velocity, and every physics update
-  uses Newton's law of gravity between every pair of bodies.
+  uses Newton's law of gravity between every pair of bodies. Physics updates
+  use a symplectic integrator so each step updates velocity from gravity
+  before updating position from the new velocity.
 
   Background:
     Given the orbit simulator is opened
@@ -38,7 +40,7 @@ Feature: 2D orbit simulator
 
   Scenario Outline: Physics ticks update velocity and position from gravity
     Given the default orbit simulator bodies are running
-    When the simulator advances by <seconds> seconds using gravity constant <gravity_constant> and velocity-first integration
+    When the simulator advances by <seconds> seconds using gravity constant <gravity_constant> and symplectic integration
     Then the body <body> has position <x>, <y> and velocity <vx>, <vy>
 
     Examples:
@@ -49,9 +51,9 @@ Feature: 2D orbit simulator
 
   Scenario Outline: Pause stops physics updates
     Given the default orbit simulator bodies are running
-    And the simulator has advanced by <before_pause_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration
+    And the simulator has advanced by <before_pause_seconds> seconds using gravity constant <gravity_constant> and symplectic integration
     When the pause button is pressed
-    And the simulator attempts to advance by <paused_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration
+    And the simulator attempts to advance by <paused_seconds> seconds using gravity constant <gravity_constant> and symplectic integration
     Then the simulation is paused
     And the control button label is <resume_label>
     And the body <body> has position <x>, <y> and velocity <vx>, <vy>
@@ -64,7 +66,7 @@ Feature: 2D orbit simulator
 
   Scenario Outline: Restart restores the initial simulation
     Given the default orbit simulator bodies are running
-    And the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration
+    And the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant> and symplectic integration
     When the restart button is pressed
     Then the simulation is running
     And the control button label is <pause_label>
@@ -86,7 +88,7 @@ Feature: 2D orbit simulator
   Scenario Outline: Speed slider scales simulated time
     Given the default orbit simulator bodies are running
     When the speed slider is set to <speed_multiplier>
-    And the simulator advances display time by <display_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration
+    And the simulator advances display time by <display_seconds> seconds using gravity constant <gravity_constant> and symplectic integration
     Then the simulator has advanced physics time by <physics_seconds> seconds
     And the speed slider label is <speed_label>
     And the body <body> has position <x>, <y> and velocity <vx>, <vy>
