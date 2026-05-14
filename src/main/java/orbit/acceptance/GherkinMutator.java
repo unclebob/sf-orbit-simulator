@@ -27,6 +27,31 @@ public class GherkinMutator {
       "elapsed_seconds",
       "gravity_constant"
   );
+  private static final Set<String> EQUIVALENT_VELOCITY_PREVIEW_KEYS = Set.of(
+      "mouse_x",
+      "mouse_y"
+  );
+  private static final Set<String> EQUIVALENT_SEPARATE_COLLISION_KEYS = Set.of(
+      "first_body",
+      "first_color",
+      "first_mass",
+      "first_radius_px",
+      "first_vx",
+      "first_vy",
+      "first_y",
+      "second_body",
+      "second_color",
+      "second_mass",
+      "second_radius_px",
+      "second_vx",
+      "second_vy",
+      "second_y"
+  );
+  private static final Set<String> EQUIVALENT_MERGED_COLLISION_KEYS = Set.of(
+      "first_body",
+      "second_body",
+      "second_color"
+  );
 
   private final ValueMutator valueMutator = new ValueMutator();
 
@@ -120,6 +145,9 @@ public class GherkinMutator {
       case "Pause stops physics updates" -> key.equals("paused_seconds");
       case "Restart restores the initial simulation" -> EQUIVALENT_RESTART_KEYS.contains(key);
       case "Near-body click adds a body in circular orbit around that body" -> key.equals("diameter_count");
+      case "Dragging a body previews its velocity change" -> EQUIVALENT_VELOCITY_PREVIEW_KEYS.contains(key);
+      case "Bodies outside collision range remain separate" -> EQUIVALENT_SEPARATE_COLLISION_KEYS.contains(key);
+      case "Colliding bodies merge into one body" -> EQUIVALENT_MERGED_COLLISION_KEYS.contains(key);
       default -> false;
     };
   }

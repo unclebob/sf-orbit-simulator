@@ -1,6 +1,7 @@
 package orbit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -121,5 +122,55 @@ class PhysicsTest {
     assertEquals(44, moon.periapsisDistance(), 0.000001);
     assertEquals(66, moonSimulator.apoapsisDistance("moon"), 0.000001);
     assertEquals(4.1161, moon.velocity().y(), 0.0001);
+  }
+
+  @Test
+  void releasingVelocityDragChangesVelocityWithoutMovingTheBody() {
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+
+    Body earth = simulator.setBodyVelocityFromDrag("earth", new Vector2(220, -50), 0.01);
+    Body moon = simulator.setBodyVelocityFromDrag("moon", new Vector2(264, 30), 0.01);
+
+    assertEquals(220, earth.position().x(), 0.000001);
+    assertEquals(0, earth.position().y(), 0.000001);
+    assertEquals(0, earth.velocity().x(), 0.000001);
+    assertEquals(2.5151, earth.velocity().y(), 0.0001);
+    assertEquals("earth", moon.orbitCenter());
+    assertEquals(0, moon.velocity().x(), 0.000001);
+    assertEquals(4.8227, moon.velocity().y(), 0.0001);
+  }
+
+  @Test
+  void collidingBodiesMergeWithConservedMassAreaMomentumAndCenterOfMass() {
+    OrbitSimulator simulator = new OrbitSimulator(List.of(
+        new Body("alpha", "blue", 4, 3, new Vector2(0, 0), new Vector2(2, 0)),
+        new Body("beta", "gray", 3, 1, new Vector2(4, 0), new Vector2(-2, 0))
+    ));
+
+    simulator.resolveCollisions();
+
+    assertEquals(1, simulator.bodyCount());
+    Body merged = simulator.bodies().getFirst();
+    assertEquals("blue", merged.color());
+    assertEquals(5, merged.radiusPixels(), 0.000001);
+    assertEquals(4, merged.mass(), 0.000001);
+    assertEquals(1, merged.position().x(), 0.000001);
+    assertEquals(0, merged.position().y(), 0.000001);
+    assertEquals(1, merged.velocity().x(), 0.000001);
+    assertEquals(0, merged.velocity().y(), 0.000001);
+  }
+
+  @Test
+  void bodiesOutsideLargerRadiusDoNotMerge() {
+    OrbitSimulator simulator = new OrbitSimulator(List.of(
+        new Body("alpha", "blue", 4, 3, new Vector2(0, 0), new Vector2(2, 0)),
+        new Body("beta", "gray", 3, 1, new Vector2(5, 0), new Vector2(-2, 0))
+    ));
+
+    simulator.resolveCollisions();
+
+    assertEquals(2, simulator.bodyCount());
+    assertTrue(simulator.findBody("alpha").isPresent());
+    assertTrue(simulator.findBody("beta").isPresent());
   }
 }

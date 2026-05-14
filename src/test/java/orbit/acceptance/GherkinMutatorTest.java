@@ -76,6 +76,68 @@ class GherkinMutatorTest {
   }
 
   @Test
+  void filtersVelocityPreviewMouseTargetEcho() {
+    List<String> paths = mutationPaths(
+        scenario(
+            "Dragging a body previews its velocity change",
+            Map.of(
+                "body", "earth",
+                "body_x", "220",
+                "mouse_x", "220",
+                "mouse_y", "-50"
+            )
+        )
+    );
+
+    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".mouse_x")));
+    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".mouse_y")));
+    assertTrue(paths.stream().anyMatch(path -> path.endsWith(".body_x")));
+  }
+
+  @Test
+  void filtersCollisionSetupValuesThatDoNotAffectTheAssertedOutcome() {
+    List<String> paths = mutationPaths(
+        scenario(
+            "Bodies outside collision range remain separate",
+            Map.ofEntries(
+                Map.entry("first_body", "alpha"),
+                Map.entry("first_color", "blue"),
+                Map.entry("first_mass", "3"),
+                Map.entry("first_radius_px", "4"),
+                Map.entry("first_x", "0"),
+                Map.entry("first_y", "0"),
+                Map.entry("first_vx", "2"),
+                Map.entry("second_body", "beta"),
+                Map.entry("second_color", "gray"),
+                Map.entry("second_mass", "1"),
+                Map.entry("second_radius_px", "3"),
+                Map.entry("second_x", "5"),
+                Map.entry("second_y", "0"),
+                Map.entry("second_vx", "-2")
+            )
+        ),
+        scenario(
+            "Colliding bodies merge into one body",
+            Map.of(
+                "first_body", "alpha",
+                "first_color", "blue",
+                "first_mass", "3",
+                "second_body", "beta",
+                "second_color", "gray",
+                "second_mass", "1"
+            )
+        )
+    );
+
+    assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_body")));
+    assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_radius_px")));
+    assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".second_vx")));
+    assertTrue(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_x")));
+    assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[1]") && path.endsWith(".second_color")));
+    assertTrue(paths.stream().anyMatch(path -> path.contains("scenarios[1]") && path.endsWith(".first_mass")));
+  }
+
+  @Test
   void reportsTextAndJsonResults() {
     Mutation mutation = new Mutation("m\"1", "$.scenarios[0].examples[0].mass", "one\n1", "two\t2");
     List<GherkinMutator.Result> results = List.of(

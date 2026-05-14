@@ -29,6 +29,14 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> world.bodies = List.of(world.bodies.getFirst(), body(example, "second"))
       ),
       Map.entry(
+          "a body <first_body> has color <first_color>, radius <first_radius_px>, mass <first_mass>, position <first_x>, <first_y>, and velocity <first_vx>, <first_vy>",
+          (world, example) -> setCollisionBody(world, example, "first")
+      ),
+      Map.entry(
+          "a body <second_body> has color <second_color>, radius <second_radius_px>, mass <second_mass>, position <second_x>, <second_y>, and velocity <second_vx>, <second_vy>",
+          (world, example) -> setCollisionBody(world, example, "second")
+      ),
+      Map.entry(
           "gravitational acceleration is calculated using gravity constant <gravity_constant>",
           (world, example) -> world.accelerations = Physics.accelerations(world.bodies, number(example, "gravity_constant"))
       ),
@@ -64,6 +72,10 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> tick(world, example, "seconds")
       ),
       Map.entry("the body <body> has position <x>, <y> and velocity <vx>, <vy>", this::assertBodyState),
+      Map.entry(
+          "the body <body> has position <body_x>, <body_y> and velocity <vx>, <vy>",
+          (world, example) -> assertBodyState(world, example, "body_x", "body_y")
+      ),
       Map.entry(
           "the speed slider has minimum <minimum_speed>, maximum <maximum_speed>, step <speed_step>, value <default_speed>, and label <default_label>",
           this::assertDefaultSpeedSlider
@@ -127,6 +139,47 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> assertCircularOrbitSpeed(world, example, text(example, "center_body"))
       ),
       Map.entry("the body <body> orbits <center_body>", this::assertBodyOrbitsCenter),
+      Map.entry(
+          "the body <body> is dragged toward mouse position <mouse_x>, <mouse_y>",
+          this::startVelocityDrag
+      ),
+      Map.entry(
+          "a velocity preview line is drawn from <body_x>, <body_y> to <mouse_x>, <mouse_y>",
+          this::assertVelocityPreview
+      ),
+      Map.entry(
+          "the body <body> still has position <body_x>, <body_y> and velocity <vx>, <vy>",
+          (world, example) -> assertBodyState(world, example, "body_x", "body_y")
+      ),
+      Map.entry(
+          "the body <body> is dragged from position <body_x>, <body_y> to mouse position <mouse_x>, <mouse_y>",
+          this::startVelocityDragFromPosition
+      ),
+      Map.entry(
+          "the mouse button is released with velocity scale <velocity_scale>",
+          this::releaseVelocityDrag
+      ),
+      Map.entry(
+          "the body <body> still orbits <center_body>",
+          this::assertBodyOrbitsCenter
+      ),
+      Map.entry("collisions are resolved", (world, example) -> world.simulator.resolveCollisions()),
+      Map.entry(
+          "the body <first_body> has position <first_x>, <first_y> and velocity <first_vx>, <first_vy>",
+          (world, example) -> assertPrefixedBodyState(world, example, "first")
+      ),
+      Map.entry(
+          "the body <second_body> has position <second_x>, <second_y> and velocity <second_vx>, <second_vy>",
+          (world, example) -> assertPrefixedBodyState(world, example, "second")
+      ),
+      Map.entry(
+          "the original body centers were within collision radius <collision_radius_px>",
+          this::assertOriginalCollisionRadius
+      ),
+      Map.entry(
+          "the merged body has color <merged_color>, radius <merged_radius_px>, mass <merged_mass>, position <merged_x>, <merged_y>, and velocity <merged_vx>, <merged_vy>",
+          this::assertMergedBody
+      ),
       Map.entry(
           "the body <body> is dragged to apoapsis position <apoapsis_x>, <apoapsis_y> using gravity constant <gravity_constant>",
           (world, example) -> world.simulator.dragBodyToApoapsis(text(example, "body"), position(example, "apoapsis_x", "apoapsis_y"), number(example, "gravity_constant"))
@@ -212,6 +265,57 @@ public class OrbitStepHandlers implements StepHandlers {
     assertNumber(example, apoapsisKey, world.simulator.apoapsisDistance(body.name()));
   }
 
+  private void startVelocityDrag(World world, Map<String, String> example) {
+    String bodyName = text(example, "body");
+    world.draggedBodyName = bodyName;
+    world.dragStart = find(world, bodyName).position();
+    world.dragEnd = position(example, "mouse_x", "mouse_y");
+  }
+
+  private void startVelocityDragFromPosition(World world, Map<String, String> example) {
+    Body body = find(world, text(example, "body"));
+    assertVector(body.position(), example, "body_x", "body_y");
+    startVelocityDrag(world, example);
+  }
+
+  private void assertVelocityPreview(World world, Map<String, String> example) {
+    assertVector(world.dragStart, example, "body_x", "body_y");
+    assertVector(world.dragEnd, example, "mouse_x", "mouse_y");
+  }
+
+  private void releaseVelocityDrag(World world, Map<String, String> example) {
+    world.simulator.setBodyVelocityFromDrag(world.draggedBodyName, world.dragEnd, number(example, "velocity_scale"));
+  }
+
+  private void setCollisionBody(World world, Map<String, String> example, String prefix) {
+    Body body = body(example, prefix);
+    if ("first".equals(prefix)) {
+      world.firstCollisionBody = body;
+      world.bodies = List.of(body);
+    } else {
+      world.secondCollisionBody = body;
+      world.bodies = List.of(world.firstCollisionBody, body);
+      world.simulator = new OrbitSimulator(world.bodies);
+    }
+  }
+
+  private void assertOriginalCollisionRadius(World world, Map<String, String> example) {
+    double collisionRadius = Math.max(world.firstCollisionBody.radiusPixels(), world.secondCollisionBody.radiusPixels());
+    double originalDistance = world.firstCollisionBody.position().minus(world.secondCollisionBody.position()).magnitude();
+    assertNumber(example, "collision_radius_px", collisionRadius);
+    assertTrue(originalDistance <= collisionRadius, "original bodies should be within collision radius");
+  }
+
+  private void assertMergedBody(World world, Map<String, String> example) {
+    assertEquals(1, world.simulator.bodyCount());
+    Body body = world.simulator.bodies().getFirst();
+    assertEquals(text(example, "merged_color"), body.color());
+    assertNumber(example, "merged_radius_px", body.radiusPixels());
+    assertNumber(example, "merged_mass", body.mass());
+    assertVector(body.position(), example, "merged_x", "merged_y");
+    assertVector(body.velocity(), example, "merged_vx", "merged_vy");
+  }
+
   private void assertBodyOrbitsCenter(World world, Map<String, String> example) {
     Body body = find(world, text(example, "body"));
     assertEquals(text(example, "center_body"), body.orbitCenter());
@@ -242,6 +346,12 @@ public class OrbitStepHandlers implements StepHandlers {
     assertVector(body.velocity(), example, "vx", "vy");
   }
 
+  private void assertPrefixedBodyState(World world, Map<String, String> example, String prefix) {
+    Body body = find(world, text(example, prefix + "_body"));
+    assertVector(body.position(), example, prefix + "_x", prefix + "_y");
+    assertVector(body.velocity(), example, prefix + "_vx", prefix + "_vy");
+  }
+
   private Body find(World world, String name) {
     assertTrue(world.simulator != null, "simulator has not been opened");
     return world.simulator.findBody(name).orElseThrow(() -> new IllegalArgumentException("missing body: " + name));
@@ -250,8 +360,8 @@ public class OrbitStepHandlers implements StepHandlers {
   private Body body(Map<String, String> example, String prefix) {
     return new Body(
         text(example, prefix + "_body"),
-        "",
-        1,
+        textOrDefault(example, prefix + "_color", ""),
+        numberOrDefault(example, prefix + "_radius_px", 1),
         number(example, prefix + "_mass"),
         new Vector2(number(example, prefix + "_x"), number(example, prefix + "_y")),
         new Vector2(number(example, prefix + "_vx"), number(example, prefix + "_vy"))
@@ -291,6 +401,15 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private double number(Map<String, String> example, String key) {
     return Double.parseDouble(text(example, key));
+  }
+
+  private double numberOrDefault(Map<String, String> example, String key, double defaultValue) {
+    String value = example.get(key);
+    return value == null ? defaultValue : Double.parseDouble(value);
+  }
+
+  private String textOrDefault(Map<String, String> example, String key, String defaultValue) {
+    return example.getOrDefault(key, defaultValue);
   }
 
   private Vector2 position(Map<String, String> example, String xKey, String yKey) {

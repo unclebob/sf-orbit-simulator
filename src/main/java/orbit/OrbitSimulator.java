@@ -85,6 +85,14 @@ public class OrbitSimulator {
     return updated;
   }
 
+  public Body setBodyVelocityFromDrag(String bodyName, Vector2 mousePosition, double velocityScale) {
+    Body body = requireBody(bodyName);
+    Vector2 velocityDelta = mousePosition.minus(body.position()).times(velocityScale);
+    Body updated = body.withPositionAndVelocity(body.position(), body.velocity().plus(velocityDelta));
+    replaceBody(updated);
+    return updated;
+  }
+
   public double apoapsisDistance(String bodyName) {
     Body body = requireBody(bodyName);
     return body.position().minus(requireBody(body.orbitCenter()).position()).magnitude();
@@ -102,6 +110,24 @@ public class OrbitSimulator {
       Vector2 position = body.position().plus(velocity.times(seconds));
       bodies.set(i, body.withPositionAndVelocity(position, velocity));
     }
+  }
+
+  public void resolveCollisions() {
+    while (resolveFirstCollision()) {
+    }
+  }
+
+  private boolean resolveFirstCollision() {
+    for (int first = 0; first < bodies.size(); first++) {
+      for (int second = first + 1; second < bodies.size(); second++) {
+        if (areColliding(bodies.get(first), bodies.get(second))) {
+          bodies.set(first, merge(bodies.get(first), bodies.get(second)));
+          bodies.remove(second);
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   public void togglePause() {
@@ -156,6 +182,23 @@ public class OrbitSimulator {
     return bodies.stream()
         .filter(body -> position.minus(body.position()).magnitude() <= body.radiusPixels() * 2 * 4)
         .findFirst();
+  }
+
+  private boolean areColliding(Body first, Body second) {
+    double distance = first.position().minus(second.position()).magnitude();
+    return distance <= Math.max(first.radiusPixels(), second.radiusPixels());
+  }
+
+  private Body merge(Body first, Body second) {
+    double mass = first.mass() + second.mass();
+    Vector2 position = first.position().times(first.mass())
+        .plus(second.position().times(second.mass()))
+        .times(1.0 / mass);
+    Vector2 velocity = first.velocity().times(first.mass())
+        .plus(second.velocity().times(second.mass()))
+        .times(1.0 / mass);
+    double radius = Math.sqrt(first.radiusPixels() * first.radiusPixels() + second.radiusPixels() * second.radiusPixels());
+    return new Body(first.name(), first.color(), radius, mass, position, velocity, first.orbitCenter(), first.periapsisDistance());
   }
 
   private Vector2 circularOrbitVelocity(Vector2 position, Body center, double gravityConstant) {

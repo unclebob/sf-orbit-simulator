@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Map;
 import orbit.Body;
 import orbit.OrbitSimulator;
+import orbit.Vector2;
 import processing.core.PApplet;
 
 public class OrbitSketch extends PApplet {
+  private static final double BODY_DRAG_VELOCITY_SCALE = 0.01;
   private static final Map<String, Paint> PALETTE = Map.of(
       "yellow", new Paint(255, 214, 64),
       "blue", new Paint(70, 130, 255),
@@ -27,6 +29,7 @@ public class OrbitSketch extends PApplet {
 
   private OrbitSimulator simulator;
   private String draggedBodyName;
+  private Vector2 dragEnd;
   private DragAction dragAction = DragAction.NONE;
 
   public static void main(String[] args) {
@@ -55,6 +58,7 @@ public class OrbitSketch extends PApplet {
       float diameter = (float) body.radiusPixels() * 2f;
       ellipse((float) body.position().x(), (float) body.position().y(), diameter, diameter);
     }
+    drawVelocityPreview();
   }
 
   @Override
@@ -77,7 +81,11 @@ public class OrbitSketch extends PApplet {
 
   @Override
   public void mouseReleased() {
+    if (dragAction == DragAction.BODY && draggedBodyName != null && dragEnd != null) {
+      simulator.setBodyVelocityFromDrag(draggedBodyName, dragEnd, BODY_DRAG_VELOCITY_SCALE);
+    }
     draggedBodyName = null;
+    dragEnd = null;
     dragAction = DragAction.NONE;
   }
 
@@ -88,11 +96,12 @@ public class OrbitSketch extends PApplet {
 
   private void startBodyDrag(Body body) {
     draggedBodyName = body.name();
+    dragEnd = null;
     dragAction = DragAction.BODY;
   }
 
   private void dragBody() {
-    simulator.dragBodyToApoapsis(draggedBodyName, worldMouse(), 1.0);
+    dragEnd = worldMouse();
   }
 
   private void setSpeedFromMouse() {
@@ -101,6 +110,16 @@ public class OrbitSketch extends PApplet {
 
   private orbit.Vector2 worldMouse() {
     return new orbit.Vector2(mouseX - width / 2.0, mouseY - height / 2.0);
+  }
+
+  private void drawVelocityPreview() {
+    if (draggedBodyName == null || dragEnd == null) {
+      return;
+    }
+    simulator.findBody(draggedBodyName).ifPresent(body -> {
+      stroke(245);
+      line((float) body.position().x(), (float) body.position().y(), (float) dragEnd.x(), (float) dragEnd.y());
+    });
   }
 
   private void fillFor(String color) {
