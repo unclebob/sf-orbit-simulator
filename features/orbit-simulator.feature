@@ -155,6 +155,18 @@ Feature: 2D orbit simulator
       | 0              | 0              | -30      | 1            | -30          | 0            | earth | 220    | 0      | 0  | 3.0151 |
       | 0              | 0              | 30       | 1            | 30           | 0            | earth | 220    | 0      | 0  | 3.0151 |
 
+  Scenario Outline: Vertical scroll wheel adjusts the view center up and down
+    Given the default orbit simulator bodies are running
+    And the view center is <start_center_x>, <start_center_y>
+    When the orbit area receives vertical scroll input <scroll_y> with scroll scale <scroll_scale>
+    Then the view center is <end_center_x>, <end_center_y>
+    And the body <body> has position <body_x>, <body_y> and velocity <vx>, <vy>
+
+    Examples:
+      | start_center_x | start_center_y | scroll_y | scroll_scale | end_center_x | end_center_y | body  | body_x | body_y | vx | vy     |
+      | 0              | 0              | -20      | 1            | 0            | -20          | earth | 220    | 0      | 0  | 3.0151 |
+      | 0              | 0              | 20       | 1            | 0            | 20           | earth | 220    | 0      | 0  | 3.0151 |
+
   Scenario Outline: Empty orbit area click adds a body in circular orbit around the sun
     Given the default orbit simulator bodies are running
     When the empty orbit area is clicked at position <x>, <y> using gravity constant <gravity_constant>
