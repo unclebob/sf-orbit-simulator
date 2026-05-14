@@ -141,16 +141,17 @@ Feature: 2D orbit simulator
       | start_speed | end_speed | speed_label |
       | 1           | 12        | 12X         |
 
-  Scenario Outline: Scroll wheels adjust the view center
+  Scenario Outline: Horizontal scroll wheel adjusts the view center left and right
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
-    When the orbit area receives scroll input <scroll_x>, <scroll_y> with scroll scale <scroll_scale>
+    When the orbit area receives horizontal scroll input <scroll_x> with scroll scale <scroll_scale>
     Then the view center is <end_center_x>, <end_center_y>
     And the body <body> has position <body_x>, <body_y> and velocity <vx>, <vy>
 
     Examples:
-      | start_center_x | start_center_y | scroll_x | scroll_y | scroll_scale | end_center_x | end_center_y | body  | body_x | body_y | vx | vy     |
-      | 0              | 0              | 30       | -20      | 1            | 30           | -20          | earth | 220    | 0      | 0  | 3.0151 |
+      | start_center_x | start_center_y | scroll_x | scroll_scale | end_center_x | end_center_y | body  | body_x | body_y | vx | vy     |
+      | 0              | 0              | -30      | 1            | -30          | 0            | earth | 220    | 0      | 0  | 3.0151 |
+      | 0              | 0              | 30       | 1            | 30           | 0            | earth | 220    | 0      | 0  | 3.0151 |
 
   Scenario Outline: Empty orbit area click adds a body in circular orbit around the sun
     Given the default orbit simulator bodies are running
