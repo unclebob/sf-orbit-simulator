@@ -362,18 +362,15 @@ public class OrbitStepHandlers implements StepHandlers {
   }
 
   private void assertTidalStretchVector(World world, Map<String, String> example) {
-    assertEquals(text(example, "body"), world.tidalDeformation.bodyName());
-    assertVector(world.tidalDeformation.stretchVector(), example, "stretch_x", "stretch_y");
+    assertVector(tidalDeformation(world, example).stretchVector(), example, "stretch_x", "stretch_y");
   }
 
   private void assertTidalStretchMagnitude(World world, Map<String, String> example) {
-    assertEquals(text(example, "body"), world.tidalDeformation.bodyName());
-    assertNumber(example, "stretch_magnitude", world.tidalDeformation.stretchMagnitude());
+    assertNumber(example, "stretch_magnitude", tidalDeformation(world, example).stretchMagnitude());
   }
 
   private void assertTidalEllipse(World world, Map<String, String> example) {
-    TidalDeformation deformation = world.tidalDeformation;
-    assertEquals(text(example, "body"), deformation.bodyName());
+    TidalDeformation deformation = tidalDeformation(world, example);
     assertEquals(text(example, "source_body"), deformation.sourceName());
     assertVector(deformation.center(), example, "x", "y");
     assertNumber(example, "major_radius_px", deformation.majorRadiusPixels());
@@ -383,9 +380,14 @@ public class OrbitStepHandlers implements StepHandlers {
   }
 
   private void assertTidalFoci(World world, Map<String, String> example) {
+    TidalDeformation deformation = tidalDeformation(world, example);
+    assertVector(deformation.firstFocus(), example, "first_focus_x", "first_focus_y");
+    assertVector(deformation.secondFocus(), example, "second_focus_x", "second_focus_y");
+  }
+
+  private TidalDeformation tidalDeformation(World world, Map<String, String> example) {
     assertEquals(text(example, "body"), world.tidalDeformation.bodyName());
-    assertVector(world.tidalDeformation.firstFocus(), example, "first_focus_x", "first_focus_y");
-    assertVector(world.tidalDeformation.secondFocus(), example, "second_focus_x", "second_focus_y");
+    return world.tidalDeformation;
   }
 
   private void setElasticSource(World world, Map<String, String> example) {
