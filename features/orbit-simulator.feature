@@ -209,10 +209,10 @@ Feature: 2D orbit simulator
       | body | center_body | body_x | body_y | mouse_x | mouse_y | velocity_scale | vx | vy     |
       | moon | earth       | 264    | 0      | 264     | 30      | 0.01           | 0  | 4.8227 |
 
-  Scenario Outline: Bodies outside collision range remain separate
+  Scenario Outline: Bodies whose rendered edges do not touch remain separate
     Given a body <first_body> has color <first_color>, radius <first_radius_px>, mass <first_mass>, position <first_x>, <first_y>, and velocity <first_vx>, <first_vy>
     And a body <second_body> has color <second_color>, radius <second_radius_px>, mass <second_mass>, position <second_x>, <second_y>, and velocity <second_vx>, <second_vy>
-    When collisions are resolved
+    When screen collisions are resolved using rendered body edges
     Then the simulator has <body_count> bodies
     And the body <first_body> has position <first_x>, <first_y> and velocity <first_vx>, <first_vy>
     And the body <second_body> has position <second_x>, <second_y> and velocity <second_vx>, <second_vy>
@@ -221,14 +221,15 @@ Feature: 2D orbit simulator
       | first_body | first_color | first_radius_px | first_mass | first_x | first_y | first_vx | first_vy | second_body | second_color | second_radius_px | second_mass | second_x | second_y | second_vx | second_vy | body_count |
       | alpha      | blue        | 4               | 3          | 0       | 0       | 2        | 0        | beta        | gray         | 3                | 1           | 8        | 0        | -2        | 0         | 2          |
 
-  Scenario Outline: Colliding bodies merge into one body
+  Scenario Outline: Bodies merge when their rendered edges touch on screen
     Given a body <first_body> has color <first_color>, radius <first_radius_px>, mass <first_mass>, position <first_x>, <first_y>, and velocity <first_vx>, <first_vy>
     And a body <second_body> has color <second_color>, radius <second_radius_px>, mass <second_mass>, position <second_x>, <second_y>, and velocity <second_vx>, <second_vy>
-    When collisions are resolved
+    When screen collisions are resolved using rendered body edges
     Then the simulator has <body_count> bodies
-    And the original body centers were touching at collision distance <collision_distance_px>
+    And the original rendered body centers were <screen_distance_px> pixels apart
+    And the original rendered body edges were touching at screen distance <touch_distance_px>
     And the merged body has color <merged_color>, radius <merged_radius_px>, mass <merged_mass>, position <merged_x>, <merged_y>, and velocity <merged_vx>, <merged_vy>
 
     Examples:
-      | first_body | first_color | first_radius_px | first_mass | first_x | first_y | first_vx | first_vy | second_body | second_color | second_radius_px | second_mass | second_x | second_y | second_vx | second_vy | collision_distance_px | body_count | merged_color | merged_radius_px | merged_mass | merged_x | merged_y | merged_vx | merged_vy |
-      | alpha      | blue        | 4               | 3          | 0       | 0       | 2        | 0        | beta        | gray         | 3                | 1           | 7        | 0        | -2        | 0         | 7                     | 1          | blue         | 5                | 4           | 1.75     | 0        | 1         | 0         |
+      | first_body | first_color | first_radius_px | first_mass | first_x | first_y | first_vx | first_vy | second_body | second_color | second_radius_px | second_mass | second_x | second_y | second_vx | second_vy | screen_distance_px | touch_distance_px | body_count | merged_color | merged_radius_px | merged_mass | merged_x | merged_y | merged_vx | merged_vy |
+      | alpha      | blue        | 4               | 3          | 0       | 0       | 2        | 0        | beta        | gray         | 3                | 1           | 7        | 0        | -2        | 0         | 7                  | 7                 | 1          | blue         | 5                | 4           | 1.75     | 0        | 1         | 0         |
