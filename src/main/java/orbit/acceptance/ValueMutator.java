@@ -18,13 +18,31 @@ public class ValueMutator {
   public String mutate(String path, String value) {
     String trimmed = value.trim();
     Random random = new Random((path + "\n" + value).hashCode());
-    return mutate(path, value, trimmed, random);
+    return mutateValue(path, value, trimmed, random);
   }
 
-  private String mutate(String path, String original, String trimmed, Random random) {
+  private String mutateValue(String path, String original, String trimmed, Random random) {
     if (trimmed.contains(",")) {
       return mutateList(path, trimmed, random);
     }
+    if (INTEGER.matcher(trimmed).matches()) {
+      return mutateInteger(trimmed, random);
+    }
+    if (FLOAT.matcher(trimmed).matches()) {
+      return mutateFloat(trimmed, random);
+    }
+    String temporal = mutateTemporal(trimmed, random);
+    if (temporal != null) {
+      return temporal;
+    }
+    String literal = mutateLiteral(trimmed, random);
+    if (literal != null) {
+      return literal;
+    }
+    return dither(original, random);
+  }
+
+  private String mutateLiteral(String trimmed, Random random) {
     String lower = trimmed.toLowerCase(Locale.ROOT);
     if (lower.equals("true") || lower.equals("false")) {
       return Boolean.toString(!Boolean.parseBoolean(lower));
@@ -32,19 +50,10 @@ public class ValueMutator {
     if (lower.equals("null") || lower.equals("nil") || lower.equals("none")) {
       return "value" + (random.nextInt(9) + 1);
     }
-    if (INTEGER.matcher(trimmed).matches()) {
-      long value = Long.parseLong(trimmed);
-      long delta = random.nextInt(9) + 1L;
-      return Long.toString(value + (random.nextBoolean() ? delta : -delta));
-    }
-    if (FLOAT.matcher(trimmed).matches()) {
-      BigDecimal value = new BigDecimal(trimmed);
-      BigDecimal delta = BigDecimal.valueOf((random.nextInt(9) + 1) / 10.0);
-      if (random.nextBoolean()) {
-        delta = delta.negate();
-      }
-      return value.add(delta).stripTrailingZeros().toPlainString();
-    }
+    return null;
+  }
+
+  private String mutateTemporal(String trimmed, Random random) {
     String dateTime = mutateDateTime(trimmed, random);
     if (dateTime != null) {
       return dateTime;
@@ -52,7 +61,27 @@ public class ValueMutator {
     if (DURATION.matcher(trimmed).matches()) {
       return mutateDuration(trimmed, random);
     }
-    return dither(original, random);
+    return null;
+  }
+
+  private String mutateInteger(String trimmed, Random random) {
+    long value = Long.parseLong(trimmed);
+    long delta = random.nextInt(9) + 1L;
+    return Long.toString(value + signed(delta, random));
+  }
+
+  private String mutateFloat(String trimmed, Random random) {
+    BigDecimal value = new BigDecimal(trimmed);
+    BigDecimal delta = BigDecimal.valueOf((random.nextInt(9) + 1) / 10.0);
+    return value.add(signed(delta, random)).stripTrailingZeros().toPlainString();
+  }
+
+  private long signed(long delta, Random random) {
+    return random.nextBoolean() ? delta : -delta;
+  }
+
+  private BigDecimal signed(BigDecimal delta, Random random) {
+    return random.nextBoolean() ? delta : delta.negate();
   }
 
   private String mutateList(String path, String trimmed, Random random) {
@@ -62,7 +91,7 @@ public class ValueMutator {
       values.add(part.trim());
     }
     int selected = random.nextInt(values.size());
-    values.set(selected, mutate(path + "[" + selected + "]", values.get(selected), values.get(selected).trim(), random));
+    values.set(selected, mutateValue(path + "[" + selected + "]", values.get(selected), values.get(selected).trim(), random));
     return String.join(", ", values);
   }
 

@@ -3,8 +3,11 @@ package orbit.acceptance;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class GherkinParserTest {
   @Test
@@ -33,5 +36,25 @@ class GherkinParserTest {
         "Scenario: sample",
         "  Then value is present"
     )));
+  }
+
+  @Test
+  void returnsUsageExitCodeForWrongArguments() {
+    assertEquals(2, GherkinParser.exitCode(new String[] {"feature-only"}));
+  }
+
+  @Test
+  void writesJsonIrFromFeatureFile(@TempDir Path directory) throws Exception {
+    Path feature = directory.resolve("example.feature");
+    Path json = directory.resolve("feature.json");
+    Files.writeString(feature, """
+        Feature: Example
+        Scenario: sample
+          Then value is present
+        """);
+
+    assertEquals(0, GherkinParser.exitCode(new String[] {feature.toString(), json.toString()}));
+
+    assertEquals("Example", FeatureJson.read(Files.readString(json)).name());
   }
 }

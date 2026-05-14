@@ -6,15 +6,20 @@ import java.nio.file.Path;
 
 public class AcceptanceGenerator {
   public static void main(String[] args) {
+    System.exit(exitCode(args));
+  }
+
+  static int exitCode(String[] args) {
     if (args.length != 2) {
       System.err.println("usage: acceptance-generator <json-ir> <generated-test-output>");
-      System.exit(2);
+      return 2;
     }
     try {
       new AcceptanceGenerator().generate(Path.of(args[0]), Path.of(args[1]));
+      return 0;
     } catch (Exception error) {
       System.err.println(error.getMessage());
-      System.exit(1);
+      return 1;
     }
   }
 

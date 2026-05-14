@@ -15,100 +15,83 @@ public class GherkinParser {
   private static final Pattern PARAMETER = Pattern.compile("<([A-Za-z0-9_]+)>");
 
   public static void main(String[] args) {
+    System.exit(exitCode(args));
+  }
+
+  static int exitCode(String[] args) {
     if (args.length != 2) {
       System.err.println("usage: gherkin-parser <feature-file> <json-output>");
-      System.exit(2);
+      return 2;
     }
     try {
       Feature feature = new GherkinParser().parse(Files.readAllLines(Path.of(args[0])));
       Path output = Path.of(args[1]);
       Files.createDirectories(output.getParent());
       Files.writeString(output, FeatureJson.write(feature));
+      return 0;
     } catch (Exception error) {
       System.err.println(error.getMessage());
-      System.exit(1);
+      return 1;
     }
   }
 
   public Feature parse(List<String> lines) {
-    String featureName = null;
-    List<Feature.Step> background = new ArrayList<>();
-    List<Feature.Scenario> scenarios = new ArrayList<>();
-    MutableScenario current = null;
-    Section section = Section.NONE;
-    List<String> headers = null;
-
+    ParseState state = new ParseState();
     for (String rawLine : lines) {
       String line = rawLine.trim();
-      if (line.isEmpty() || line.startsWith("#")) {
-        continue;
-      }
-      if (line.startsWith("Feature:")) {
-        featureName = line.substring("Feature:".length()).trim();
-        continue;
-      }
-      if (line.equals("Background:")) {
-        section = Section.BACKGROUND;
-        current = null;
-        headers = null;
-        continue;
-      }
-      if (line.startsWith("Scenario:") || line.startsWith("Scenario Outline:")) {
-        if (current != null) {
-          scenarios.add(current.toScenario());
-        }
-        String prefix = line.startsWith("Scenario Outline:") ? "Scenario Outline:" : "Scenario:";
-        current = new MutableScenario(line.substring(prefix.length()).trim());
-        section = Section.SCENARIO;
-        headers = null;
-        continue;
-      }
-      if (line.equals("Examples:")) {
-        if (current == null) {
-          throw new IllegalArgumentException("Examples outside a scenario");
-        }
-        section = Section.EXAMPLES;
-        headers = null;
-        continue;
-      }
-      Matcher step = STEP.matcher(line);
-      if (step.matches()) {
-        Feature.Step parsedStep = new Feature.Step(step.group(1), step.group(2).trim(), parameters(step.group(2)));
-        if (section == Section.BACKGROUND) {
-          background.add(parsedStep);
-        } else if (current != null && section == Section.SCENARIO) {
-          current.steps.add(parsedStep);
-        } else {
-          throw new IllegalArgumentException("Step outside a background or scenario");
-        }
-        continue;
-      }
-      if (line.startsWith("|")) {
-        if (section != Section.EXAMPLES || current == null) {
-          throw new IllegalArgumentException("Example row outside examples");
-        }
-        List<String> cells = cells(line);
-        if (headers == null) {
-          headers = cells;
-        } else {
-          if (cells.size() != headers.size()) {
-            throw new IllegalArgumentException("Example row cell count differs from header");
-          }
-          Map<String, String> example = new LinkedHashMap<>();
-          for (int i = 0; i < headers.size(); i++) {
-            example.put(headers.get(i), cells.get(i));
-          }
-          current.examples.add(example);
-        }
+      if (isContent(line)) {
+        parseLine(state, line);
       }
     }
-    if (current != null) {
-      scenarios.add(current.toScenario());
+    if (state.current != null) {
+      state.scenarios.add(state.current.toScenario());
     }
-    if (featureName == null || featureName.isBlank()) {
+    if (state.featureName == null || state.featureName.isBlank()) {
       throw new IllegalArgumentException("Missing feature declaration");
     }
-    return new Feature(featureName, List.copyOf(background), List.copyOf(scenarios));
+    return new Feature(state.featureName, List.copyOf(state.background), List.copyOf(state.scenarios));
+  }
+
+  private static boolean isContent(String line) {
+    return !line.isEmpty() && !line.startsWith("#");
+  }
+
+  private static void parseLine(ParseState state, String line) {
+    if (parseFeatureOrBackground(state, line)) {
+      return;
+    }
+    if (isScenario(line)) {
+      state.startScenario(line);
+    } else if (line.equals("Examples:")) {
+      state.startExamples();
+    } else {
+      parseStepOrExample(state, line);
+    }
+  }
+
+  private static void parseStepOrExample(ParseState state, String line) {
+    Matcher step = STEP.matcher(line);
+    if (step.matches()) {
+      state.addStep(step);
+    } else if (line.startsWith("|")) {
+      state.addExampleRow(cells(line));
+    }
+  }
+
+  private static boolean parseFeatureOrBackground(ParseState state, String line) {
+    if (line.startsWith("Feature:")) {
+      state.featureName = line.substring("Feature:".length()).trim();
+      return true;
+    }
+    if (line.equals("Background:")) {
+      state.startBackground();
+      return true;
+    }
+    return false;
+  }
+
+  private static boolean isScenario(String line) {
+    return line.startsWith("Scenario:") || line.startsWith("Scenario Outline:");
   }
 
   private static List<String> parameters(String text) {
@@ -138,6 +121,72 @@ public class GherkinParser {
 
   private enum Section {
     NONE, BACKGROUND, SCENARIO, EXAMPLES
+  }
+
+  private static final class ParseState {
+    private String featureName;
+    private final List<Feature.Step> background = new ArrayList<>();
+    private final List<Feature.Scenario> scenarios = new ArrayList<>();
+    private MutableScenario current;
+    private Section section = Section.NONE;
+    private List<String> headers;
+
+    void startBackground() {
+      section = Section.BACKGROUND;
+      current = null;
+      headers = null;
+    }
+
+    void startScenario(String line) {
+      if (current != null) {
+        scenarios.add(current.toScenario());
+      }
+      String prefix = line.startsWith("Scenario Outline:") ? "Scenario Outline:" : "Scenario:";
+      current = new MutableScenario(line.substring(prefix.length()).trim());
+      section = Section.SCENARIO;
+      headers = null;
+    }
+
+    void startExamples() {
+      if (current == null) {
+        throw new IllegalArgumentException("Examples outside a scenario");
+      }
+      section = Section.EXAMPLES;
+      headers = null;
+    }
+
+    void addStep(Matcher step) {
+      Feature.Step parsedStep = new Feature.Step(step.group(1), step.group(2).trim(), parameters(step.group(2)));
+      if (section == Section.BACKGROUND) {
+        background.add(parsedStep);
+      } else if (current != null && section == Section.SCENARIO) {
+        current.steps.add(parsedStep);
+      } else {
+        throw new IllegalArgumentException("Step outside a background or scenario");
+      }
+    }
+
+    void addExampleRow(List<String> cells) {
+      if (section != Section.EXAMPLES || current == null) {
+        throw new IllegalArgumentException("Example row outside examples");
+      }
+      if (headers == null) {
+        headers = cells;
+        return;
+      }
+      current.examples.add(exampleFrom(cells));
+    }
+
+    private Map<String, String> exampleFrom(List<String> cells) {
+      if (cells.size() != headers.size()) {
+        throw new IllegalArgumentException("Example row cell count differs from header");
+      }
+      Map<String, String> example = new LinkedHashMap<>();
+      for (int i = 0; i < headers.size(); i++) {
+        example.put(headers.get(i), cells.get(i));
+      }
+      return example;
+    }
   }
 
   private static final class MutableScenario {

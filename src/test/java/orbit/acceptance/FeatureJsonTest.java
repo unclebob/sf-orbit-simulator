@@ -25,4 +25,19 @@ class FeatureJsonTest {
     assertEquals("setup", read.background().getFirst().text());
     assertEquals("42", read.scenarios().getFirst().examples().getFirst().get("value"));
   }
+
+  @Test
+  void escapesJsonStrings() {
+    Feature feature = new Feature(
+        "Quoted \"Name\"",
+        List.of(new Feature.Step("Given", "line\\break\nnext\rtab\tend", List.of())),
+        List.of()
+    );
+
+    String json = FeatureJson.write(feature);
+    Feature read = FeatureJson.read(json);
+
+    assertEquals("Quoted \"Name\"", read.name());
+    assertEquals("line\\break\nnext\rtab\tend", read.background().getFirst().text());
+  }
 }

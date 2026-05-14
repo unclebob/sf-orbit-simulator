@@ -1,10 +1,18 @@
 package orbit.app;
 
+import java.util.Map;
 import orbit.Body;
 import orbit.OrbitSimulator;
 import processing.core.PApplet;
 
 public class OrbitSketch extends PApplet {
+  private static final Map<String, Paint> PALETTE = Map.of(
+      "yellow", new Paint(255, 214, 64),
+      "blue", new Paint(70, 130, 255),
+      "gray", new Paint(180, 180, 180)
+  );
+  private static final Paint DEFAULT_PAINT = new Paint(255, 255, 255);
+
   private OrbitSimulator simulator;
 
   public static void main(String[] args) {
@@ -35,11 +43,12 @@ public class OrbitSketch extends PApplet {
   }
 
   private void fillFor(String color) {
-    switch (color) {
-      case "yellow" -> fill(255, 214, 64);
-      case "blue" -> fill(70, 130, 255);
-      case "gray" -> fill(180);
-      default -> fill(255);
+    PALETTE.getOrDefault(color, DEFAULT_PAINT).applyTo(this);
+  }
+
+  private record Paint(int red, int green, int blue) {
+    void applyTo(PApplet sketch) {
+      sketch.fill(red, green, blue);
     }
   }
 }

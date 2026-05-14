@@ -1,11 +1,14 @@
 package orbit.acceptance;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public final class FeatureJson {
+  private static final Map<Character, String> JSON_ESCAPES = jsonEscapes();
+
   private FeatureJson() {
   }
 
@@ -188,17 +191,23 @@ public final class FeatureJson {
   private static String quote(String value) {
     StringBuilder quoted = new StringBuilder("\"");
     for (int i = 0; i < value.length(); i++) {
-      char c = value.charAt(i);
-      switch (c) {
-        case '\\' -> quoted.append("\\\\");
-        case '"' -> quoted.append("\\\"");
-        case '\n' -> quoted.append("\\n");
-        case '\r' -> quoted.append("\\r");
-        case '\t' -> quoted.append("\\t");
-        default -> quoted.append(c);
-      }
+      appendQuoted(quoted, value.charAt(i));
     }
     return quoted.append('"').toString();
+  }
+
+  private static void appendQuoted(StringBuilder quoted, char c) {
+    quoted.append(JSON_ESCAPES.getOrDefault(c, Character.toString(c)));
+  }
+
+  private static Map<Character, String> jsonEscapes() {
+    Map<Character, String> escapes = new HashMap<>();
+    escapes.put('\\', "\\\\");
+    escapes.put('"', "\\\"");
+    escapes.put('\n', "\\n");
+    escapes.put('\r', "\\r");
+    escapes.put('\t', "\\t");
+    return Map.copyOf(escapes);
   }
 
   private static final class Parser {
