@@ -9,7 +9,7 @@ public class OrbitSimulator {
   public static final int MAXIMUM_SPEED = 20;
   public static final int SPEED_STEP = 1;
   private static final String ADDED_BODY_COLOR = "gray";
-  private static final double ADDED_BODY_RADIUS = 6;
+  private static final double ADDED_BODY_RADIUS = 4;
   private static final double ADDED_BODY_MASS = 1;
 
   private final List<Body> bodies;

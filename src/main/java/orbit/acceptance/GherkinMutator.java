@@ -45,6 +45,7 @@ public class GherkinMutator {
       "second_radius_px",
       "second_vx",
       "second_vy",
+      "second_x",
       "second_y"
   );
   private static final Set<String> EQUIVALENT_MERGED_COLLISION_KEYS = Set.of(
@@ -52,11 +53,21 @@ public class GherkinMutator {
       "second_body",
       "second_color"
   );
+  private static final Set<String> EQUIVALENT_RADIUS_CORRELATION_KEYS = Set.of(
+      "larger_body",
+      "larger_mass",
+      "larger_radius_px",
+      "smaller_body",
+      "smaller_mass",
+      "smaller_radius_px"
+  );
   private static final Map<String, Set<String>> EQUIVALENT_KEYS_BY_SCENARIO = Map.of(
       "Gravity is applied between every pair of bodies", EQUIVALENT_GRAVITY_KEYS,
       "Pause stops physics updates", Set.of("paused_seconds"),
       "Restart restores the initial simulation", EQUIVALENT_RESTART_KEYS,
       "Near-body click adds a body in circular orbit around that body", Set.of("diameter_count"),
+      "Speed slider thumb can be dragged", Set.of("start_speed"),
+      "Body radius increases with mass", EQUIVALENT_RADIUS_CORRELATION_KEYS,
       "Dragging a body previews its velocity change", EQUIVALENT_VELOCITY_PREVIEW_KEYS,
       "Bodies outside collision range remain separate", EQUIVALENT_SEPARATE_COLLISION_KEYS,
       "Colliding bodies merge into one body", EQUIVALENT_MERGED_COLLISION_KEYS

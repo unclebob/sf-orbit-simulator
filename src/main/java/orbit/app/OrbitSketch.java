@@ -7,9 +7,11 @@ import orbit.Body;
 import orbit.OrbitSimulator;
 import orbit.Vector2;
 import processing.core.PApplet;
+import processing.event.MouseEvent;
 
 public class OrbitSketch extends PApplet {
   private static final double BODY_DRAG_VELOCITY_SCALE = 0.01;
+  private static final double WHEEL_SCROLL_SCALE = 20;
   private static final Map<String, Paint> PALETTE = Map.of(
       "yellow", new Paint(255, 214, 64),
       "blue", new Paint(70, 130, 255),
@@ -29,6 +31,7 @@ public class OrbitSketch extends PApplet {
   private static final List<Button> BUTTONS = List.of(PAUSE_BUTTON, RESTART_BUTTON);
 
   private OrbitSimulator simulator;
+  private Vector2 viewCenter = new Vector2(0, 0);
   private String draggedBodyName;
   private Vector2 dragEnd;
   private DragAction dragAction = DragAction.NONE;
@@ -51,7 +54,7 @@ public class OrbitSketch extends PApplet {
   public void draw() {
     background(10, 12, 18);
     drawControls();
-    translate(width / 2f, height / 2f);
+    translate(width / 2f - (float) viewCenter.x(), height / 2f - (float) viewCenter.y());
     simulator.advanceDisplayTime(1.0 / 60.0, 1.0);
     for (Body body : simulator.bodies()) {
       fillFor(body.color());
@@ -86,6 +89,11 @@ public class OrbitSketch extends PApplet {
     clearDrag();
   }
 
+  @Override
+  public void mouseWheel(MouseEvent event) {
+    adjustViewCenter(new Vector2(0, event.getCount()), WHEEL_SCROLL_SCALE);
+  }
+
   private void pressOrbitArea() {
     simulator.bodyAt(worldMouse())
         .ifPresentOrElse(this::startBodyDrag, () -> simulator.addBodyFromClick(worldMouse(), 1.0));
@@ -118,7 +126,11 @@ public class OrbitSketch extends PApplet {
   }
 
   private orbit.Vector2 worldMouse() {
-    return new orbit.Vector2(mouseX - width / 2.0, mouseY - height / 2.0);
+    return new orbit.Vector2(mouseX - width / 2.0, mouseY - height / 2.0).plus(viewCenter);
+  }
+
+  private void adjustViewCenter(Vector2 scroll, double scrollScale) {
+    viewCenter = viewCenter.plus(scroll.times(scrollScale));
   }
 
   private void drawVelocityPreview() {

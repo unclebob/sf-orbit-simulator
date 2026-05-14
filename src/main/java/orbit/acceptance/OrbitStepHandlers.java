@@ -19,6 +19,18 @@ public class OrbitStepHandlers implements StepHandlers {
           "the body <body> is visible with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>",
           this::assertVisibleBody
       ),
+      Map.entry(
+          "a body <smaller_body> has mass <smaller_mass> and radius <smaller_radius_px>",
+          (world, example) -> world.bodies = List.of(massRadiusBody(example, "smaller"))
+      ),
+      Map.entry(
+          "a body <larger_body> has mass <larger_mass> and radius <larger_radius_px>",
+          (world, example) -> world.bodies = List.of(world.bodies.getFirst(), massRadiusBody(example, "larger"))
+      ),
+      Map.entry(
+          "<larger_body> has greater radius than <smaller_body>",
+          this::assertLargerBodyHasGreaterRadius
+      ),
       Map.entry("the body <orbiter> starts <distance> units from <center>", this::assertDistance),
       Map.entry(
           "a body <first_body> has mass <first_mass>, position <first_x>, <first_y>, and velocity <first_vx>, <first_vy>",
@@ -105,6 +117,18 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> world.simulator.setSpeedMultiplier((int) number(example, "end_speed"))
       ),
       Map.entry("the speed slider value is <end_speed>", (world, example) -> assertNumber(example, "end_speed", world.simulator.speedMultiplier())),
+      Map.entry(
+          "the view center is <start_center_x>, <start_center_y>",
+          (world, example) -> setOrAssertViewCenter(world, example, "start_center_x", "start_center_y")
+      ),
+      Map.entry(
+          "the view center is <end_center_x>, <end_center_y>",
+          (world, example) -> setOrAssertViewCenter(world, example, "end_center_x", "end_center_y")
+      ),
+      Map.entry(
+          "the orbit area receives scroll input <scroll_x>, <scroll_y> with scroll scale <scroll_scale>",
+          this::scrollViewCenter
+      ),
       Map.entry(
           "the empty orbit area is clicked at position <x>, <y> using gravity constant <gravity_constant>",
           (world, example) -> world.addedBody = world.simulator.addBodyInCircularOrbit(position(example, "x", "y"), "sun", number(example, "gravity_constant"))
@@ -236,6 +260,27 @@ public class OrbitStepHandlers implements StepHandlers {
     assertEquals(text(example, "center_body"), world.addedBody.orbitCenter());
   }
 
+  private void assertLargerBodyHasGreaterRadius(World world, Map<String, String> example) {
+    Body smaller = find(world.bodies, text(example, "smaller_body"));
+    Body larger = find(world.bodies, text(example, "larger_body"));
+    assertTrue(larger.radiusPixels() > smaller.radiusPixels(), "larger mass should render with larger radius");
+  }
+
+  private void setOrAssertViewCenter(World world, Map<String, String> example, String xKey, String yKey) {
+    Vector2 expected = position(example, xKey, yKey);
+    if (!world.viewCenterSet) {
+      world.viewCenter = expected;
+      world.viewCenterSet = true;
+      return;
+    }
+    assertVector(world.viewCenter, expected.x(), expected.y());
+  }
+
+  private void scrollViewCenter(World world, Map<String, String> example) {
+    Vector2 scroll = position(example, "scroll_x", "scroll_y");
+    world.viewCenter = world.viewCenter.plus(scroll.times(number(example, "scroll_scale")));
+  }
+
   private void assertBodyMatches(Body body, Map<String, String> example) {
     assertEquals(text(example, "body"), body.name());
     assertEquals(text(example, "color"), body.color());
@@ -357,6 +402,13 @@ public class OrbitStepHandlers implements StepHandlers {
     return world.simulator.findBody(name).orElseThrow(() -> new IllegalArgumentException("missing body: " + name));
   }
 
+  private Body find(List<Body> bodies, String name) {
+    return bodies.stream()
+        .filter(body -> body.name().equals(name))
+        .findFirst()
+        .orElseThrow(() -> new IllegalArgumentException("missing body: " + name));
+  }
+
   private Body body(Map<String, String> example, String prefix) {
     return new Body(
         text(example, prefix + "_body"),
@@ -365,6 +417,17 @@ public class OrbitStepHandlers implements StepHandlers {
         number(example, prefix + "_mass"),
         new Vector2(number(example, prefix + "_x"), number(example, prefix + "_y")),
         new Vector2(number(example, prefix + "_vx"), number(example, prefix + "_vy"))
+    );
+  }
+
+  private Body massRadiusBody(Map<String, String> example, String prefix) {
+    return new Body(
+        text(example, prefix + "_body"),
+        "",
+        number(example, prefix + "_radius_px"),
+        number(example, prefix + "_mass"),
+        new Vector2(0, 0),
+        new Vector2(0, 0)
     );
   }
 
