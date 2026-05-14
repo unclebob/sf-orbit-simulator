@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import orbit.Body;
 import orbit.OrbitSimulator;
 import orbit.Physics;
@@ -12,42 +13,78 @@ import orbit.Vector2;
 
 public class OrbitStepHandlers implements StepHandlers {
   private static final double TOLERANCE = 0.0001;
+  private final Map<String, BiConsumer<World, Map<String, String>>> handlers = Map.ofEntries(
+      Map.entry("the orbit simulator is opened", (world, example) -> world.simulator = OrbitSimulator.defaults()),
+      Map.entry(
+          "the body <body> is visible with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>",
+          this::assertVisibleBody
+      ),
+      Map.entry("the body <orbiter> starts <distance> units from <center>", this::assertDistance),
+      Map.entry(
+          "a body <first_body> has mass <first_mass>, position <first_x>, <first_y>, and velocity <first_vx>, <first_vy>",
+          (world, example) -> world.bodies = List.of(body(example, "first"))
+      ),
+      Map.entry(
+          "a body <second_body> has mass <second_mass>, position <second_x>, <second_y>, and velocity <second_vx>, <second_vy>",
+          (world, example) -> world.bodies = List.of(world.bodies.getFirst(), body(example, "second"))
+      ),
+      Map.entry(
+          "gravitational acceleration is calculated using gravity constant <gravity_constant>",
+          (world, example) -> world.accelerations = Physics.accelerations(world.bodies, number(example, "gravity_constant"))
+      ),
+      Map.entry(
+          "the acceleration of <first_body> is <first_ax>, <first_ay>",
+          (world, example) -> assertVector(world.accelerations.get(0), example, "first_ax", "first_ay")
+      ),
+      Map.entry(
+          "the acceleration of <second_body> is <second_ax>, <second_ay>",
+          (world, example) -> assertVector(world.accelerations.get(1), example, "second_ax", "second_ay")
+      ),
+      Map.entry("the default orbit simulator bodies are running", (world, example) -> world.simulator = OrbitSimulator.defaults()),
+      Map.entry(
+          "the simulator has advanced by <before_pause_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration",
+          (world, example) -> tick(world, example, "before_pause_seconds")
+      ),
+      Map.entry(
+          "the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration",
+          (world, example) -> tick(world, example, "elapsed_seconds")
+      ),
+      Map.entry("the pause button is pressed", (world, example) -> world.simulator.togglePause()),
+      Map.entry(
+          "the simulator attempts to advance by <paused_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration",
+          (world, example) -> tick(world, example, "paused_seconds")
+      ),
+      Map.entry("the simulation is paused", (world, example) -> assertTrue(world.simulator.isPaused(), "simulation should be paused")),
+      Map.entry("the restart button is pressed", (world, example) -> world.simulator.restart()),
+      Map.entry("the simulation is running", (world, example) -> assertTrue(world.simulator.isRunning(), "simulation should be running")),
+      Map.entry("the control button label is <resume_label>", (world, example) -> assertControlLabel(world, example, "resume_label")),
+      Map.entry("the control button label is <pause_label>", (world, example) -> assertControlLabel(world, example, "pause_label")),
+      Map.entry(
+          "the simulator advances by <seconds> seconds using gravity constant <gravity_constant> and velocity-first integration",
+          (world, example) -> tick(world, example, "seconds")
+      ),
+      Map.entry("the body <body> has position <x>, <y> and velocity <vx>, <vy>", this::assertBodyState)
+  );
 
   @Override
   public void handle(String stepText, World world, Map<String, String> example) {
-    switch (stepText) {
-      case "the orbit simulator is opened" -> world.simulator = OrbitSimulator.defaults();
-      case "the body <body> is visible with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>" ->
-          assertVisibleBody(world, example);
-      case "the body <orbiter> starts <distance> units from <center>" -> assertDistance(world, example);
-      case "a body <first_body> has mass <first_mass>, position <first_x>, <first_y>, and velocity <first_vx>, <first_vy>" ->
-          world.bodies = List.of(body(example, "first"));
-      case "a body <second_body> has mass <second_mass>, position <second_x>, <second_y>, and velocity <second_vx>, <second_vy>" ->
-          world.bodies = List.of(world.bodies.getFirst(), body(example, "second"));
-      case "gravitational acceleration is calculated using gravity constant <gravity_constant>" ->
-          world.accelerations = Physics.accelerations(world.bodies, number(example, "gravity_constant"));
-      case "the acceleration of <first_body> is <first_ax>, <first_ay>" ->
-          assertVector(world.accelerations.get(0), example, "first_ax", "first_ay");
-      case "the acceleration of <second_body> is <second_ax>, <second_ay>" ->
-          assertVector(world.accelerations.get(1), example, "second_ax", "second_ay");
-      case "the default orbit simulator bodies are running" -> world.simulator = OrbitSimulator.defaults();
-      case "the simulator has advanced by <before_pause_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration" ->
-          world.simulator.tick(number(example, "before_pause_seconds"), number(example, "gravity_constant"));
-      case "the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration" ->
-          world.simulator.tick(number(example, "elapsed_seconds"), number(example, "gravity_constant"));
-      case "the pause button is pressed" -> world.simulator.togglePause();
-      case "the simulator attempts to advance by <paused_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration" ->
-          world.simulator.tick(number(example, "paused_seconds"), number(example, "gravity_constant"));
-      case "the simulation is paused" -> assertTrue(world.simulator.isPaused(), "simulation should be paused");
-      case "the restart button is pressed" -> world.simulator.restart();
-      case "the simulation is running" -> assertTrue(world.simulator.isRunning(), "simulation should be running");
-      case "the control button label is <resume_label>" -> assertEquals(text(example, "resume_label"), world.simulator.controlButtonLabel());
-      case "the control button label is <pause_label>" -> assertEquals(text(example, "pause_label"), world.simulator.controlButtonLabel());
-      case "the simulator advances by <seconds> seconds using gravity constant <gravity_constant> and velocity-first integration" ->
-          world.simulator.tick(number(example, "seconds"), number(example, "gravity_constant"));
-      case "the body <body> has position <x>, <y> and velocity <vx>, <vy>" -> assertBodyState(world, example);
-      default -> throw new UnsupportedStep();
+    handlerFor(stepText).accept(world, example);
+  }
+
+  private BiConsumer<World, Map<String, String>> handlerFor(String stepText) {
+    BiConsumer<World, Map<String, String>> handler = handlers.get(stepText);
+    if (handler == null) {
+      throw new UnsupportedStep();
     }
+    return handler;
+  }
+
+  private void tick(World world, Map<String, String> example, String secondsKey) {
+    world.simulator.tick(number(example, secondsKey), number(example, "gravity_constant"));
+  }
+
+  private void assertControlLabel(World world, Map<String, String> example, String labelKey) {
+    assertEquals(text(example, labelKey), world.simulator.controlButtonLabel());
   }
 
   private void assertVisibleBody(World world, Map<String, String> example) {
