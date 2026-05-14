@@ -28,6 +28,27 @@ Feature: 2D orbit simulator
       | moon         | 1            | 4                 | earth       | 100         | 12               |
       | earth        | 100          | 12                | sun         | 2000        | 36               |
 
+  Scenario Outline: Tidal forces stretch elastic bodies into ellipses
+    Given a body <body> has mass <mass>, radius <radius_px>, position <x>, <y>, and elasticity <elasticity>
+    And a tidal source <source_body> has mass <source_mass> and position <source_x>, <source_y>
+    When tidal deformation is calculated
+    Then the body <body> is rendered as an ellipse centered at <x>, <y> with major radius <major_radius_px>, minor radius <minor_radius_px>, and major axis pointing toward <source_body>
+    And the body <body> has gravity foci at <first_focus_x>, <first_focus_y> and <second_focus_x>, <second_focus_y>
+
+    Examples:
+      | body  | mass | radius_px | x   | y | elasticity | source_body | source_mass | source_x | source_y | major_radius_px | minor_radius_px | first_focus_x | first_focus_y | second_focus_x | second_focus_y |
+      | earth | 100  | 12        | 220 | 0 | 0.2        | sun         | 2000        | 0        | 0        | 14              | 10              | 210.202       | 0             | 229.798        | 0              |
+
+  Scenario Outline: Elastic body gravity is split between ellipse foci
+    Given an elastic body <source_body> has mass <source_mass>, first focus <first_focus_x>, <first_focus_y>, and second focus <second_focus_x>, <second_focus_y>
+    And a body <target_body> has mass <target_mass>, position <target_x>, <target_y>, and velocity <target_vx>, <target_vy>
+    When gravitational acceleration from <source_body> to <target_body> is calculated using gravity constant <gravity_constant>
+    Then the acceleration of <target_body> is <target_ax>, <target_ay>
+
+    Examples:
+      | source_body | source_mass | first_focus_x | first_focus_y | second_focus_x | second_focus_y | target_body | target_mass | target_x | target_y | target_vx | target_vy | gravity_constant | target_ax | target_ay |
+      | earth       | 100         | 210.202       | 0             | 229.798        | 0              | moon        | 1           | 264      | 0        | 0         | 4.5227    | 1                | -0.060019 | 0         |
+
   Scenario Outline: Default bodies are arranged as nested orbits
     Then the body <orbiter> starts <distance> units from <center>
 
