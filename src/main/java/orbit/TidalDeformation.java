@@ -10,8 +10,7 @@ public record TidalDeformation(
     double stretchMagnitude,
     Vector2 axisTowardSource,
     Vector2 firstFocus,
-    Vector2 secondFocus,
-    String focusLineColor
+    Vector2 secondFocus
 ) {
   public static TidalDeformation calculate(Body body, Body source, double elasticity) {
     return calculate(body, source, elasticity, 32, 1);
@@ -47,8 +46,7 @@ public record TidalDeformation(
         stretchMagnitude,
         stretchAxis,
         body.position().plus(stretchAxis.times(focusDistance)),
-        body.position().minus(stretchAxis.times(focusDistance)),
-        "black"
+        body.position().minus(stretchAxis.times(focusDistance))
     );
   }
 

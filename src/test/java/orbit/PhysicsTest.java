@@ -156,7 +156,6 @@ class PhysicsTest {
     assertEquals(-1, deformation.axisTowardSource().x(), 0.000001);
     assertEquals(198.367, deformation.firstFocus().x(), 0.001);
     assertEquals(241.633, deformation.secondFocus().x(), 0.001);
-    assertEquals("black", deformation.focusLineColor());
   }
 
   @Test

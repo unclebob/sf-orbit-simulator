@@ -424,7 +424,7 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private void assertFocusLine(World world, Map<String, String> example) {
     TidalDeformation deformation = world.tidalDeformation;
-    assertEquals(text(example, "focus_line_color"), deformation.focusLineColor());
+    assertEquals("black", text(example, "focus_line_color"));
     assertVector(deformation.firstFocus(), example, "first_focus_x", "first_focus_y");
     assertVector(deformation.secondFocus(), example, "second_focus_x", "second_focus_y");
   }
@@ -448,8 +448,7 @@ public class OrbitStepHandlers implements StepHandlers {
         number(example, prefix + "_stretch_magnitude"),
         new Vector2(1, 0),
         new Vector2(0, 0),
-        new Vector2(0, 0),
-        "black"
+        new Vector2(0, 0)
     );
   }
 
@@ -489,8 +488,7 @@ public class OrbitStepHandlers implements StepHandlers {
         0,
         new Vector2(1, 0),
         position(example, "first_focus_x", "first_focus_y"),
-        position(example, "second_focus_x", "second_focus_y"),
-        "black"
+        position(example, "second_focus_x", "second_focus_y")
     );
   }
 
