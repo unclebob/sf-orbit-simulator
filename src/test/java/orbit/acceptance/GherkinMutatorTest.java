@@ -11,22 +11,54 @@ import org.junit.jupiter.api.Test;
 class GherkinMutatorTest {
   @Test
   void filtersGravityInputsThatDoNotAffectAcceleration() {
-    List<String> paths = mutationPaths(
-        scenario(
-            "Gravity is applied between every pair of bodies",
-            Map.of(
-                "first_body", "sun",
-                "first_vx", "0",
-                "first_mass", "2000",
-                "first_x", "0",
-                "first_ax", "0.002066"
-            )
+    assertFilteredOutAndRetained(
+        "Gravity is applied between every pair of bodies",
+        Map.of(
+            "first_body", "sun",
+            "first_vx", "0",
+            "first_mass", "2000",
+            "first_x", "0",
+            "first_ax", "0.002066"
+        ),
+        List.of("first_body", "first_vx"),
+        List.of("first_mass")
+    );
+  }
+
+  @Test
+  void filtersVelocityPreviewMouseTargetEcho() {
+    assertFilteredOutAndRetained(
+        "Dragging a body previews its velocity change",
+        Map.of(
+            "body", "earth",
+            "body_x", "220",
+            "mouse_x", "220",
+            "mouse_y", "-50"
+        ),
+        List.of("mouse_x", "mouse_y"),
+        List.of("body_x")
+    );
+  }
+
+  private static void assertFilteredOutAndRetained(
+      String scenarioName,
+      Map<String, String> example,
+      List<String> filteredKeys,
+      List<String> retainedKeys
+  ) {
+    List<String> paths = mutationPaths(scenario(scenarioName, example));
+    filteredKeys.forEach(key ->
+        assertFalse(
+            paths.stream().anyMatch(path -> path.endsWith("." + key)),
+            () -> "Expected key to be filtered: " + key
         )
     );
-
-    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".first_body")));
-    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".first_vx")));
-    assertTrue(paths.stream().anyMatch(path -> path.endsWith(".first_mass")));
+    retainedKeys.forEach(key ->
+        assertTrue(
+            paths.stream().anyMatch(path -> path.endsWith("." + key)),
+            () -> "Expected key to be retained: " + key
+        )
+    );
   }
 
   @Test
@@ -73,25 +105,6 @@ class GherkinMutatorTest {
 
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".diameter_count")));
     assertTrue(paths.stream().anyMatch(path -> path.endsWith(".center_body")));
-  }
-
-  @Test
-  void filtersVelocityPreviewMouseTargetEcho() {
-    List<String> paths = mutationPaths(
-        scenario(
-            "Dragging a body previews its velocity change",
-            Map.of(
-                "body", "earth",
-                "body_x", "220",
-                "mouse_x", "220",
-                "mouse_y", "-50"
-            )
-        )
-    );
-
-    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".mouse_x")));
-    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".mouse_y")));
-    assertTrue(paths.stream().anyMatch(path -> path.endsWith(".body_x")));
   }
 
   @Test

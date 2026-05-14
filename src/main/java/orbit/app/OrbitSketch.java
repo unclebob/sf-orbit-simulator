@@ -2,6 +2,7 @@ package orbit.app;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import orbit.Body;
 import orbit.OrbitSimulator;
 import orbit.Vector2;
@@ -81,12 +82,8 @@ public class OrbitSketch extends PApplet {
 
   @Override
   public void mouseReleased() {
-    if (dragAction == DragAction.BODY && draggedBodyName != null && dragEnd != null) {
-      simulator.setBodyVelocityFromDrag(draggedBodyName, dragEnd, BODY_DRAG_VELOCITY_SCALE);
-    }
-    draggedBodyName = null;
-    dragEnd = null;
-    dragAction = DragAction.NONE;
+    dragAction.release(this);
+    clearDrag();
   }
 
   private void pressOrbitArea() {
@@ -104,6 +101,18 @@ public class OrbitSketch extends PApplet {
     dragEnd = worldMouse();
   }
 
+  private void releaseBodyDrag() {
+    Optional.ofNullable(draggedBodyName)
+        .filter(name -> dragEnd != null)
+        .ifPresent(name -> simulator.setBodyVelocityFromDrag(name, dragEnd, BODY_DRAG_VELOCITY_SCALE));
+  }
+
+  private void clearDrag() {
+    draggedBodyName = null;
+    dragEnd = null;
+    dragAction = DragAction.NONE;
+  }
+
   private void setSpeedFromMouse() {
     simulator.setSpeedMultiplier(SPEED_SLIDER.speedFrom(mouseX, this));
   }
@@ -113,13 +122,16 @@ public class OrbitSketch extends PApplet {
   }
 
   private void drawVelocityPreview() {
-    if (draggedBodyName == null || dragEnd == null) {
-      return;
-    }
-    simulator.findBody(draggedBodyName).ifPresent(body -> {
+    bodyDragPreview().ifPresent(body -> {
       stroke(245);
       line((float) body.position().x(), (float) body.position().y(), (float) dragEnd.x(), (float) dragEnd.y());
     });
+  }
+
+  private Optional<Body> bodyDragPreview() {
+    return Optional.ofNullable(draggedBodyName)
+        .filter(name -> dragEnd != null)
+        .flatMap(simulator::findBody);
   }
 
   private void fillFor(String color) {
@@ -233,11 +245,19 @@ public class OrbitSketch extends PApplet {
       @Override
       void drag(OrbitSketch sketch) {
       }
+
+      @Override
+      void release(OrbitSketch sketch) {
+      }
     },
     SPEED {
       @Override
       void drag(OrbitSketch sketch) {
         sketch.setSpeedFromMouse();
+      }
+
+      @Override
+      void release(OrbitSketch sketch) {
       }
     },
     BODY {
@@ -245,8 +265,15 @@ public class OrbitSketch extends PApplet {
       void drag(OrbitSketch sketch) {
         sketch.dragBody();
       }
+
+      @Override
+      void release(OrbitSketch sketch) {
+        sketch.releaseBodyDrag();
+      }
     };
 
     abstract void drag(OrbitSketch sketch);
+
+    abstract void release(OrbitSketch sketch);
   }
 }

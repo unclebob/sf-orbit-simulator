@@ -52,6 +52,15 @@ public class GherkinMutator {
       "second_body",
       "second_color"
   );
+  private static final Map<String, Set<String>> EQUIVALENT_KEYS_BY_SCENARIO = Map.of(
+      "Gravity is applied between every pair of bodies", EQUIVALENT_GRAVITY_KEYS,
+      "Pause stops physics updates", Set.of("paused_seconds"),
+      "Restart restores the initial simulation", EQUIVALENT_RESTART_KEYS,
+      "Near-body click adds a body in circular orbit around that body", Set.of("diameter_count"),
+      "Dragging a body previews its velocity change", EQUIVALENT_VELOCITY_PREVIEW_KEYS,
+      "Bodies outside collision range remain separate", EQUIVALENT_SEPARATE_COLLISION_KEYS,
+      "Colliding bodies merge into one body", EQUIVALENT_MERGED_COLLISION_KEYS
+  );
 
   private final ValueMutator valueMutator = new ValueMutator();
 
@@ -140,16 +149,7 @@ public class GherkinMutator {
   }
 
   private boolean isEquivalentMutation(Feature.Scenario scenario, String key) {
-    return switch (scenario.name()) {
-      case "Gravity is applied between every pair of bodies" -> EQUIVALENT_GRAVITY_KEYS.contains(key);
-      case "Pause stops physics updates" -> key.equals("paused_seconds");
-      case "Restart restores the initial simulation" -> EQUIVALENT_RESTART_KEYS.contains(key);
-      case "Near-body click adds a body in circular orbit around that body" -> key.equals("diameter_count");
-      case "Dragging a body previews its velocity change" -> EQUIVALENT_VELOCITY_PREVIEW_KEYS.contains(key);
-      case "Bodies outside collision range remain separate" -> EQUIVALENT_SEPARATE_COLLISION_KEYS.contains(key);
-      case "Colliding bodies merge into one body" -> EQUIVALENT_MERGED_COLLISION_KEYS.contains(key);
-      default -> false;
-    };
+    return EQUIVALENT_KEYS_BY_SCENARIO.getOrDefault(scenario.name(), Set.of()).contains(key);
   }
 
   private Feature apply(Feature feature, Mutation mutation) {
