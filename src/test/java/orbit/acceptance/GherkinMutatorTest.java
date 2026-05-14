@@ -11,23 +11,18 @@ import org.junit.jupiter.api.Test;
 class GherkinMutatorTest {
   @Test
   void filtersGravityInputsThatDoNotAffectAcceleration() {
-    Feature feature = new Feature(
-        "Example",
-        List.of(),
-        List.of(new Feature.Scenario(
+    List<String> paths = mutationPaths(
+        scenario(
             "Gravity is applied between every pair of bodies",
-            List.of(),
-            List.of(Map.of(
+            Map.of(
                 "first_body", "sun",
                 "first_vx", "0",
                 "first_mass", "2000",
                 "first_x", "0",
                 "first_ax", "0.002066"
-            ))
-        ))
+            )
+        )
     );
-
-    List<String> paths = new GherkinMutator().mutations(feature).stream().map(Mutation::path).toList();
 
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".first_body")));
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".first_vx")));
@@ -36,38 +31,48 @@ class GherkinMutatorTest {
 
   @Test
   void filtersControlInputsThatAreIntentionallyDiscarded() {
-    Feature feature = new Feature(
-        "Example",
-        List.of(),
-        List.of(
-            new Feature.Scenario(
-                "Pause stops physics updates",
-                List.of(),
-                List.of(Map.of(
-                    "paused_seconds", "5",
-                    "before_pause_seconds", "1",
-                    "x", "219.9592"
-                ))
-            ),
-            new Feature.Scenario(
-                "Restart restores the initial simulation",
-                List.of(),
-                List.of(Map.of(
-                    "elapsed_seconds", "3",
-                    "gravity_constant", "1",
-                    "x", "220"
-                ))
+    List<String> paths = mutationPaths(
+        scenario(
+            "Pause stops physics updates",
+            Map.of(
+                "paused_seconds", "5",
+                "before_pause_seconds", "1",
+                "x", "219.9592"
+            )
+        ),
+        scenario(
+            "Restart restores the initial simulation",
+            Map.of(
+                "elapsed_seconds", "3",
+                "gravity_constant", "1",
+                "x", "220"
             )
         )
     );
-
-    List<String> paths = new GherkinMutator().mutations(feature).stream().map(Mutation::path).toList();
 
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".paused_seconds")));
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".elapsed_seconds")));
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".gravity_constant")));
     assertTrue(paths.stream().anyMatch(path -> path.endsWith(".before_pause_seconds")));
     assertTrue(paths.stream().anyMatch(path -> path.endsWith(".x")));
+  }
+
+  @Test
+  void filtersNearBodyClickPreconditionDistance() {
+    List<String> paths = mutationPaths(
+        scenario(
+            "Near-body click adds a body in circular orbit around that body",
+            Map.of(
+                "diameter_count", "4",
+                "center_body", "earth",
+                "x", "220",
+                "y", "60"
+            )
+        )
+    );
+
+    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".diameter_count")));
+    assertTrue(paths.stream().anyMatch(path -> path.endsWith(".center_body")));
   }
 
   @Test
@@ -105,5 +110,14 @@ class GherkinMutatorTest {
 
     assertEquals(1, options.workers());
     assertEquals(5, options.timeout().toSeconds());
+  }
+
+  private static List<String> mutationPaths(Feature.Scenario... scenarios) {
+    Feature feature = new Feature("Example", List.of(), List.of(scenarios));
+    return new GherkinMutator().mutations(feature).stream().map(Mutation::path).toList();
+  }
+
+  private static Feature.Scenario scenario(String name, Map<String, String> example) {
+    return new Feature.Scenario(name, List.of(), List.of(example));
   }
 }

@@ -9,4 +9,5 @@ public class World {
   OrbitSimulator simulator;
   List<Body> bodies;
   List<Vector2> accelerations;
+  Body addedBody;
 }
