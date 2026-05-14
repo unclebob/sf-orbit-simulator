@@ -29,4 +29,31 @@ class PhysicsTest {
     assertEquals(-0.0408, earth.velocity().x(), 0.0001);
     assertEquals(3.0151, earth.velocity().y(), 0.0001);
   }
+
+  @Test
+  void pauseSkipsTicksAndChangesControlLabel() {
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+    simulator.tick(1, 1);
+    simulator.togglePause();
+
+    simulator.tick(5, 1);
+
+    Body earth = simulator.findBody("earth").orElseThrow();
+    assertEquals(219.9592, earth.position().x(), 0.0001);
+    assertEquals("Resume", simulator.controlButtonLabel());
+  }
+
+  @Test
+  void restartRestoresInitialBodiesAndRunningState() {
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+    simulator.tick(3, 1);
+    simulator.togglePause();
+
+    simulator.restart();
+
+    Body earth = simulator.findBody("earth").orElseThrow();
+    assertEquals(220, earth.position().x(), 0.000001);
+    assertEquals(0, earth.velocity().x(), 0.000001);
+    assertEquals("Pause", simulator.controlButtonLabel());
+  }
 }

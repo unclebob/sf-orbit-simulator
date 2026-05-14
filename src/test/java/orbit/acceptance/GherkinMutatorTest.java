@@ -35,6 +35,42 @@ class GherkinMutatorTest {
   }
 
   @Test
+  void filtersControlInputsThatAreIntentionallyDiscarded() {
+    Feature feature = new Feature(
+        "Example",
+        List.of(),
+        List.of(
+            new Feature.Scenario(
+                "Pause stops physics updates",
+                List.of(),
+                List.of(Map.of(
+                    "paused_seconds", "5",
+                    "before_pause_seconds", "1",
+                    "x", "219.9592"
+                ))
+            ),
+            new Feature.Scenario(
+                "Restart restores the initial simulation",
+                List.of(),
+                List.of(Map.of(
+                    "elapsed_seconds", "3",
+                    "gravity_constant", "1",
+                    "x", "220"
+                ))
+            )
+        )
+    );
+
+    List<String> paths = new GherkinMutator().mutations(feature).stream().map(Mutation::path).toList();
+
+    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".paused_seconds")));
+    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".elapsed_seconds")));
+    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".gravity_constant")));
+    assertTrue(paths.stream().anyMatch(path -> path.endsWith(".before_pause_seconds")));
+    assertTrue(paths.stream().anyMatch(path -> path.endsWith(".x")));
+  }
+
+  @Test
   void reportsTextAndJsonResults() {
     Mutation mutation = new Mutation("m\"1", "$.scenarios[0].examples[0].mass", "one\n1", "two\t2");
     List<GherkinMutator.Result> results = List.of(

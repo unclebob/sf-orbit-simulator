@@ -23,6 +23,10 @@ public class GherkinMutator {
       "second_vx",
       "second_vy"
   );
+  private static final Set<String> EQUIVALENT_RESTART_KEYS = Set.of(
+      "elapsed_seconds",
+      "gravity_constant"
+  );
 
   private final ValueMutator valueMutator = new ValueMutator();
 
@@ -108,8 +112,12 @@ public class GherkinMutator {
   }
 
   private boolean isEquivalentMutation(Feature.Scenario scenario, String key) {
-    return scenario.name().equals("Gravity is applied between every pair of bodies")
-        && EQUIVALENT_GRAVITY_KEYS.contains(key);
+    return switch (scenario.name()) {
+      case "Gravity is applied between every pair of bodies" -> EQUIVALENT_GRAVITY_KEYS.contains(key);
+      case "Pause stops physics updates" -> key.equals("paused_seconds");
+      case "Restart restores the initial simulation" -> EQUIVALENT_RESTART_KEYS.contains(key);
+      default -> false;
+    };
   }
 
   private Feature apply(Feature feature, Mutation mutation) {

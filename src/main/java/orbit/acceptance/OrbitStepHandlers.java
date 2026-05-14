@@ -31,6 +31,18 @@ public class OrbitStepHandlers implements StepHandlers {
       case "the acceleration of <second_body> is <second_ax>, <second_ay>" ->
           assertVector(world.accelerations.get(1), example, "second_ax", "second_ay");
       case "the default orbit simulator bodies are running" -> world.simulator = OrbitSimulator.defaults();
+      case "the simulator has advanced by <before_pause_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration" ->
+          world.simulator.tick(number(example, "before_pause_seconds"), number(example, "gravity_constant"));
+      case "the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration" ->
+          world.simulator.tick(number(example, "elapsed_seconds"), number(example, "gravity_constant"));
+      case "the pause button is pressed" -> world.simulator.togglePause();
+      case "the simulator attempts to advance by <paused_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration" ->
+          world.simulator.tick(number(example, "paused_seconds"), number(example, "gravity_constant"));
+      case "the simulation is paused" -> assertTrue(world.simulator.isPaused(), "simulation should be paused");
+      case "the restart button is pressed" -> world.simulator.restart();
+      case "the simulation is running" -> assertTrue(world.simulator.isRunning(), "simulation should be running");
+      case "the control button label is <resume_label>" -> assertEquals(text(example, "resume_label"), world.simulator.controlButtonLabel());
+      case "the control button label is <pause_label>" -> assertEquals(text(example, "pause_label"), world.simulator.controlButtonLabel());
       case "the simulator advances by <seconds> seconds using gravity constant <gravity_constant> and velocity-first integration" ->
           world.simulator.tick(number(example, "seconds"), number(example, "gravity_constant"));
       case "the body <body> has position <x>, <y> and velocity <vx>, <vy>" -> assertBodyState(world, example);
