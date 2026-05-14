@@ -37,7 +37,7 @@ Feature: 2D orbit simulator
 
     Examples:
       | body  | mass | radius_px | x   | y | elasticity | source_body | source_mass | source_x | source_y | major_radius_px | minor_radius_px | first_focus_x | first_focus_y | second_focus_x | second_focus_y |
-      | earth | 100  | 12        | 220 | 0 | 0.2        | sun         | 2000        | 0        | 0        | 14              | 10              | 210.202       | 0             | 229.798        | 0              |
+      | earth | 100  | 12        | 220 | 0 | 0.6        | sun         | 2000        | 0        | 0        | 18              | 6               | 203.029       | 0             | 236.971        | 0              |
 
   Scenario Outline: Elastic body gravity is split between ellipse foci
     Given an elastic body <source_body> has mass <source_mass>, first focus <first_focus_x>, <first_focus_y>, and second focus <second_focus_x>, <second_focus_y>
@@ -47,7 +47,7 @@ Feature: 2D orbit simulator
 
     Examples:
       | source_body | source_mass | first_focus_x | first_focus_y | second_focus_x | second_focus_y | target_body | target_mass | target_x | target_y | target_vx | target_vy | gravity_constant | target_ax | target_ay |
-      | earth       | 100         | 210.202       | 0             | 229.798        | 0              | moon        | 1           | 264      | 0        | 0         | 4.5227    | 1                | -0.060019 | 0         |
+      | earth       | 100         | 203.029       | 0             | 236.971        | 0              | moon        | 1           | 264      | 0        | 0         | 4.5227    | 1                | -0.060416 | 0         |
 
   Scenario Outline: Default bodies are arranged as nested orbits
     Then the body <orbiter> starts <distance> units from <center>
