@@ -96,3 +96,57 @@ Feature: 2D orbit simulator
       | 2                | 1               | 1                | 2               | 2X          | earth | 219.8368 | 6.0302 | -0.0816  | 3.0151 |
       | 2                | 1               | 1                | 2               | 2X          | moon  | 263.6786 | 9.0454 | -0.1607  | 4.5227 |
       | 2                | 1               | 1                | 2               | 2X          | sun   | 0.0083   | 0      | 0.0042   | 0      |
+
+  Scenario Outline: Speed slider thumb can be dragged
+    Given the default orbit simulator bodies are running
+    And the speed slider is set to <start_speed>
+    When the speed slider thumb is dragged to <end_speed>
+    Then the speed slider value is <end_speed>
+    And the speed slider label is <speed_label>
+
+    Examples:
+      | start_speed | end_speed | speed_label |
+      | 1           | 12        | 12X         |
+
+  Scenario Outline: Empty orbit area click adds a body in circular orbit around the sun
+    Given the default orbit simulator bodies are running
+    When the empty orbit area is clicked at position <x>, <y> using gravity constant <gravity_constant>
+    Then a body <body> is added with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>
+    And the body <body> has circular orbit speed <speed> around the sun
+    And the simulator has <body_count> bodies
+
+    Examples:
+      | x   | y | gravity_constant | body   | color | radius_px | mass | vx | vy     | speed  | body_count |
+      | 300 | 0 | 1                | body_1 | gray  | 6         | 1    | 0  | 2.5820 | 2.5820 | 4          |
+
+  Scenario Outline: Dragging a body sets its aphelion
+    Given the default orbit simulator bodies are running
+    When the body <body> is dragged to aphelion position <aphelion_x>, <aphelion_y> using gravity constant <gravity_constant>
+    Then the body <body> has perihelion distance <perihelion_distance> and aphelion distance <aphelion_distance> around the sun
+    And the body <body> has position <aphelion_x>, <aphelion_y> and velocity <vx>, <vy>
+
+    Examples:
+      | body  | aphelion_x | aphelion_y | gravity_constant | perihelion_distance | aphelion_distance | vx | vy     |
+      | earth | 330        | 0          | 1                | 220                 | 330               | 0  | 2.2020 |
+
+  Scenario Outline: Near-body click adds a body in circular orbit around that body
+    Given the default orbit simulator bodies are running
+    When the orbit area is clicked at position <x>, <y> within <diameter_count> diameters of <center_body> using gravity constant <gravity_constant>
+    Then a body <body> is added orbiting <center_body> with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>
+    And the body <body> has circular orbit speed <speed> around <center_body>
+    And the simulator has <body_count> bodies
+
+    Examples:
+      | x   | y  | diameter_count | center_body | gravity_constant | body   | color | radius_px | mass | vx      | vy     | speed  | body_count |
+      | 220 | 60 | 4              | earth       | 1                | body_1 | gray  | 6         | 1    | -1.2910 | 3.0151 | 1.2910 | 4          |
+
+  Scenario Outline: Dragging an orbiting body sets its apoapsis around its orbit center
+    Given the default orbit simulator bodies are running
+    And the body <body> orbits <center_body>
+    When the body <body> is dragged to apoapsis position <apoapsis_x>, <apoapsis_y> using gravity constant <gravity_constant>
+    Then the body <body> has periapsis distance <periapsis_distance> and apoapsis distance <apoapsis_distance> around <center_body>
+    And the body <body> has position <apoapsis_x>, <apoapsis_y> and velocity <vx>, <vy>
+
+    Examples:
+      | body | center_body | apoapsis_x | apoapsis_y | gravity_constant | periapsis_distance | apoapsis_distance | vx | vy     |
+      | moon | earth       | 286        | 0          | 1                | 44                 | 66                | 0  | 4.1161 |
