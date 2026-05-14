@@ -46,3 +46,32 @@ Feature: 2D orbit simulator
       | 1       | 1                | earth | 219.9592 | 3.0151 | -0.0408   | 3.0151 |
       | 1       | 1                | moon  | 263.9196 | 4.5227 | -0.0804   | 4.5227 |
       | 1       | 1                | sun   | 0.0021   | 0      | 0.0021    | 0      |
+
+  Scenario Outline: Pause stops physics updates
+    Given the default orbit simulator bodies are running
+    And the simulator has advanced by <before_pause_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration
+    When the pause button is pressed
+    And the simulator attempts to advance by <paused_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration
+    Then the simulation is paused
+    And the control button label is <resume_label>
+    And the body <body> has position <x>, <y> and velocity <vx>, <vy>
+
+    Examples:
+      | before_pause_seconds | paused_seconds | gravity_constant | resume_label | body  | x        | y      | vx      | vy     |
+      | 1                    | 5              | 1                | Resume       | earth | 219.9592 | 3.0151 | -0.0408 | 3.0151 |
+      | 1                    | 5              | 1                | Resume       | moon  | 263.9196 | 4.5227 | -0.0804 | 4.5227 |
+      | 1                    | 5              | 1                | Resume       | sun   | 0.0021   | 0      | 0.0021  | 0      |
+
+  Scenario Outline: Restart restores the initial simulation
+    Given the default orbit simulator bodies are running
+    And the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration
+    When the restart button is pressed
+    Then the simulation is running
+    And the control button label is <pause_label>
+    And the body <body> has position <x>, <y> and velocity <vx>, <vy>
+
+    Examples:
+      | elapsed_seconds | gravity_constant | pause_label | body  | x   | y | vx | vy     |
+      | 3               | 1                | Pause       | sun   | 0   | 0 | 0  | 0      |
+      | 3               | 1                | Pause       | earth | 220 | 0 | 0  | 3.0151 |
+      | 3               | 1                | Pause       | moon  | 264 | 0 | 0  | 4.5227 |
