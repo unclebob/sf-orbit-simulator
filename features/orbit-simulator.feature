@@ -121,15 +121,25 @@ Feature: 2D orbit simulator
       | x   | y | gravity_constant | body   | color | radius_px | mass | vx | vy     | speed  | body_count |
       | 300 | 0 | 1                | body_1 | gray  | 6         | 1    | 0  | 2.5820 | 2.5820 | 4          |
 
-  Scenario Outline: Dragging a body sets its aphelion
+  Scenario Outline: Dragging a body previews its velocity change
     Given the default orbit simulator bodies are running
-    When the body <body> is dragged to aphelion position <aphelion_x>, <aphelion_y> using gravity constant <gravity_constant>
-    Then the body <body> has perihelion distance <perihelion_distance> and aphelion distance <aphelion_distance> around the sun
-    And the body <body> has position <aphelion_x>, <aphelion_y> and velocity <vx>, <vy>
+    When the body <body> is dragged toward mouse position <mouse_x>, <mouse_y>
+    Then a velocity preview line is drawn from <body_x>, <body_y> to <mouse_x>, <mouse_y>
+    And the body <body> still has position <body_x>, <body_y> and velocity <vx>, <vy>
 
     Examples:
-      | body  | aphelion_x | aphelion_y | gravity_constant | perihelion_distance | aphelion_distance | vx | vy     |
-      | earth | 330        | 0          | 1                | 220                 | 330               | 0  | 2.2020 |
+      | body  | body_x | body_y | mouse_x | mouse_y | vx | vy     |
+      | earth | 220    | 0      | 220     | -50     | 0  | 3.0151 |
+
+  Scenario Outline: Releasing a dragged body updates its velocity vector
+    Given the default orbit simulator bodies are running
+    When the body <body> is dragged from position <body_x>, <body_y> to mouse position <mouse_x>, <mouse_y>
+    And the mouse button is released with velocity scale <velocity_scale>
+    Then the body <body> has position <body_x>, <body_y> and velocity <vx>, <vy>
+
+    Examples:
+      | body  | body_x | body_y | mouse_x | mouse_y | velocity_scale | vx | vy     |
+      | earth | 220    | 0      | 220     | -50     | 0.01           | 0  | 2.5151 |
 
   Scenario Outline: Near-body click adds a body in circular orbit around that body
     Given the default orbit simulator bodies are running
@@ -142,13 +152,14 @@ Feature: 2D orbit simulator
       | x   | y  | diameter_count | center_body | gravity_constant | body   | color | radius_px | mass | vx      | vy     | speed  | body_count |
       | 220 | 60 | 4              | earth       | 1                | body_1 | gray  | 6         | 1    | -1.2910 | 3.0151 | 1.2910 | 4          |
 
-  Scenario Outline: Dragging an orbiting body sets its apoapsis around its orbit center
+  Scenario Outline: Releasing a dragged orbiting body updates its velocity vector
     Given the default orbit simulator bodies are running
     And the body <body> orbits <center_body>
-    When the body <body> is dragged to apoapsis position <apoapsis_x>, <apoapsis_y> using gravity constant <gravity_constant>
-    Then the body <body> has periapsis distance <periapsis_distance> and apoapsis distance <apoapsis_distance> around <center_body>
-    And the body <body> has position <apoapsis_x>, <apoapsis_y> and velocity <vx>, <vy>
+    When the body <body> is dragged from position <body_x>, <body_y> to mouse position <mouse_x>, <mouse_y>
+    And the mouse button is released with velocity scale <velocity_scale>
+    Then the body <body> still orbits <center_body>
+    And the body <body> has position <body_x>, <body_y> and velocity <vx>, <vy>
 
     Examples:
-      | body | center_body | apoapsis_x | apoapsis_y | gravity_constant | periapsis_distance | apoapsis_distance | vx | vy     |
-      | moon | earth       | 286        | 0          | 1                | 44                 | 66                | 0  | 4.1161 |
+      | body | center_body | body_x | body_y | mouse_x | mouse_y | velocity_scale | vx | vy     |
+      | moon | earth       | 264    | 0      | 264     | 30      | 0.01           | 0  | 4.8227 |
