@@ -110,6 +110,7 @@ public class OrbitSimulator {
       Vector2 position = body.position().plus(velocity.times(seconds));
       bodies.set(i, body.withPositionAndVelocity(position, velocity));
     }
+    resolveCollisions();
   }
 
   public void resolveCollisions() {
