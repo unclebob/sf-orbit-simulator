@@ -46,8 +46,26 @@ public class OrbitStepHandlers implements StepHandlers {
       case "the simulator advances by <seconds> seconds using gravity constant <gravity_constant> and velocity-first integration" ->
           world.simulator.tick(number(example, "seconds"), number(example, "gravity_constant"));
       case "the body <body> has position <x>, <y> and velocity <vx>, <vy>" -> assertBodyState(world, example);
+      case "the speed slider has minimum <minimum_speed>, maximum <maximum_speed>, step <speed_step>, value <default_speed>, and label <default_label>" ->
+          assertDefaultSpeedSlider(world, example);
+      case "the speed slider is set to <speed_multiplier>" ->
+          world.simulator.setSpeedMultiplier((int) number(example, "speed_multiplier"));
+      case "the simulator advances display time by <display_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration" ->
+          world.simulator.advanceDisplayTime(number(example, "display_seconds"), number(example, "gravity_constant"));
+      case "the simulator has advanced physics time by <physics_seconds> seconds" ->
+          assertNumber(example, "physics_seconds", world.simulator.elapsedPhysicsSeconds());
+      case "the speed slider label is <speed_label>" ->
+          assertEquals(text(example, "speed_label"), world.simulator.speedLabel());
       default -> throw new UnsupportedStep();
     }
+  }
+
+  private void assertDefaultSpeedSlider(World world, Map<String, String> example) {
+    assertNumber(example, "minimum_speed", OrbitSimulator.MINIMUM_SPEED);
+    assertNumber(example, "maximum_speed", OrbitSimulator.MAXIMUM_SPEED);
+    assertNumber(example, "speed_step", OrbitSimulator.SPEED_STEP);
+    assertNumber(example, "default_speed", world.simulator.speedMultiplier());
+    assertEquals(text(example, "default_label"), world.simulator.speedLabel());
   }
 
   private void assertVisibleBody(World world, Map<String, String> example) {
