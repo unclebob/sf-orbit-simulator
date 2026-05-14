@@ -46,6 +46,10 @@ public class OrbitStepHandlers implements StepHandlers {
           this::calculateIntegratedTidalDeformation
       ),
       Map.entry(
+          "tidal deformation is calculated by summing gravity over <sample_count> surface samples using gravity constant <gravity_constant>",
+          this::calculateIntegratedTidalDeformation
+      ),
+      Map.entry(
           "the integrated tidal stretch vector of <body> is <stretch_x>, <stretch_y>",
           this::assertTidalStretchVector
       ),
@@ -58,8 +62,28 @@ public class OrbitStepHandlers implements StepHandlers {
           this::assertTidalEllipse
       ),
       Map.entry(
+          "the body <body> is rendered as an ellipse centered at <x>, <y> with major radius <major_radius_px>, minor radius <minor_radius_px>, and major axis aligned with the tidal stretch vector",
+          this::assertTidalEllipseAlignedWithStretch
+      ),
+      Map.entry(
           "the body <body> has gravity foci at <first_focus_x>, <first_focus_y> and <second_focus_x>, <second_focus_y>",
           this::assertTidalFoci
+      ),
+      Map.entry(
+          "a <focus_line_color> line segment is drawn from <first_focus_x>, <first_focus_y> to <second_focus_x>, <second_focus_y>",
+          this::assertFocusLine
+      ),
+      Map.entry(
+          "a body <weaker_body> has tidal stretch magnitude <weaker_stretch_magnitude>, major radius <weaker_major_radius_px>, and minor radius <weaker_minor_radius_px>",
+          this::setWeakerTidalDeformation
+      ),
+      Map.entry(
+          "a body <stronger_body> has tidal stretch magnitude <stronger_stretch_magnitude>, major radius <stronger_major_radius_px>, and minor radius <stronger_minor_radius_px>",
+          this::setStrongerTidalDeformation
+      ),
+      Map.entry(
+          "<stronger_body> has greater elongation than <weaker_body>",
+          this::assertStrongerTidalElongation
       ),
       Map.entry(
           "an elastic body <source_body> has mass <source_mass>, first focus <first_focus_x>, <first_focus_y>, and second focus <second_focus_x>, <second_focus_y>",
@@ -178,6 +202,10 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry(
           "the orbit area receives horizontal scroll input <scroll_x> with scroll scale <scroll_scale>",
           this::scrollViewCenterHorizontally
+      ),
+      Map.entry(
+          "the orbit area receives vertical scroll input <scroll_y> with scroll scale <scroll_scale>",
+          this::scrollViewCenterVertically
       ),
       Map.entry(
           "the empty orbit area is clicked at position <x>, <y> using gravity constant <gravity_constant>",
@@ -379,10 +407,62 @@ public class OrbitStepHandlers implements StepHandlers {
     assertTrue(deformation.axisTowardSource().minus(expectedAxis.times(1.0 / expectedAxis.magnitude())).magnitude() < TOLERANCE);
   }
 
+  private void assertTidalEllipseAlignedWithStretch(World world, Map<String, String> example) {
+    TidalDeformation deformation = tidalDeformation(world, example);
+    assertVector(deformation.center(), example, "x", "y");
+    assertNumber(example, "major_radius_px", deformation.majorRadiusPixels());
+    assertNumber(example, "minor_radius_px", deformation.minorRadiusPixels());
+    Vector2 stretchAxis = deformation.stretchVector().times(1.0 / deformation.stretchMagnitude());
+    assertTrue(deformation.axisTowardSource().minus(stretchAxis).magnitude() < TOLERANCE);
+  }
+
   private void assertTidalFoci(World world, Map<String, String> example) {
     TidalDeformation deformation = tidalDeformation(world, example);
     assertVector(deformation.firstFocus(), example, "first_focus_x", "first_focus_y");
     assertVector(deformation.secondFocus(), example, "second_focus_x", "second_focus_y");
+  }
+
+  private void assertFocusLine(World world, Map<String, String> example) {
+    TidalDeformation deformation = world.tidalDeformation;
+    assertEquals(text(example, "focus_line_color"), deformation.focusLineColor());
+    assertVector(deformation.firstFocus(), example, "first_focus_x", "first_focus_y");
+    assertVector(deformation.secondFocus(), example, "second_focus_x", "second_focus_y");
+  }
+
+  private void setWeakerTidalDeformation(World world, Map<String, String> example) {
+    world.weakerTidalDeformation = tidalShape(example, "weaker");
+  }
+
+  private void setStrongerTidalDeformation(World world, Map<String, String> example) {
+    world.strongerTidalDeformation = tidalShape(example, "stronger");
+  }
+
+  private TidalDeformation tidalShape(Map<String, String> example, String prefix) {
+    return new TidalDeformation(
+        text(example, prefix + "_body"),
+        "",
+        new Vector2(0, 0),
+        number(example, prefix + "_major_radius_px"),
+        number(example, prefix + "_minor_radius_px"),
+        new Vector2(number(example, prefix + "_stretch_magnitude"), 0),
+        number(example, prefix + "_stretch_magnitude"),
+        new Vector2(1, 0),
+        new Vector2(0, 0),
+        new Vector2(0, 0),
+        "black"
+    );
+  }
+
+  private void assertStrongerTidalElongation(World world, Map<String, String> example) {
+    assertEquals(text(example, "weaker_body"), world.weakerTidalDeformation.bodyName());
+    assertEquals(text(example, "stronger_body"), world.strongerTidalDeformation.bodyName());
+    double weakerElongation = elongation(world.weakerTidalDeformation);
+    double strongerElongation = elongation(world.strongerTidalDeformation);
+    assertTrue(strongerElongation > weakerElongation, "stronger tidal stretch should create greater elongation");
+  }
+
+  private double elongation(TidalDeformation deformation) {
+    return deformation.majorRadiusPixels() - deformation.minorRadiusPixels();
   }
 
   private TidalDeformation tidalDeformation(World world, Map<String, String> example) {
@@ -409,7 +489,8 @@ public class OrbitStepHandlers implements StepHandlers {
         0,
         new Vector2(1, 0),
         position(example, "first_focus_x", "first_focus_y"),
-        position(example, "second_focus_x", "second_focus_y")
+        position(example, "second_focus_x", "second_focus_y"),
+        "black"
     );
   }
 
@@ -453,6 +534,11 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private void scrollViewCenterHorizontally(World world, Map<String, String> example) {
     Vector2 scroll = new Vector2(number(example, "scroll_x"), 0);
+    world.viewCenter = world.viewCenter.plus(scroll.times(number(example, "scroll_scale")));
+  }
+
+  private void scrollViewCenterVertically(World world, Map<String, String> example) {
+    Vector2 scroll = new Vector2(0, number(example, "scroll_y"));
     world.viewCenter = world.viewCenter.plus(scroll.times(number(example, "scroll_scale")));
   }
 

@@ -55,6 +55,6 @@ public final class Physics {
     if (targetDistance == 0 || focusDistance == 0) {
       return 1;
     }
-    return 1.0 / (1.0 + focusDistance / (targetDistance * 2.170315858014405));
+    return 1.0 / (1.0 + focusDistance / (targetDistance * 1.203931235346182));
   }
 }

@@ -146,16 +146,17 @@ class PhysicsTest {
     Body earth = new Body("earth", "blue", 12, 100, new Vector2(220, 0), new Vector2(0, 0));
     Body sun = new Body("sun", "yellow", 36, 2000, new Vector2(0, 0), new Vector2(0, 0));
 
-    TidalDeformation deformation = TidalDeformation.calculate(earth, sun, 0.6, 32, 1);
+    TidalDeformation deformation = TidalDeformation.calculate(earth, sun, 1.0, 32, 1);
 
     assertEquals(-0.906446, deformation.stretchVector().x(), 0.000001);
     assertEquals(0, deformation.stretchVector().y(), 0.000001);
     assertEquals(0.906446, deformation.stretchMagnitude(), 0.000001);
-    assertEquals(18, deformation.majorRadiusPixels(), 0.000001);
-    assertEquals(6, deformation.minorRadiusPixels(), 0.000001);
+    assertEquals(22, deformation.majorRadiusPixels(), 0.000001);
+    assertEquals(4, deformation.minorRadiusPixels(), 0.000001);
     assertEquals(-1, deformation.axisTowardSource().x(), 0.000001);
-    assertEquals(203.029, deformation.firstFocus().x(), 0.001);
-    assertEquals(236.971, deformation.secondFocus().x(), 0.001);
+    assertEquals(198.367, deformation.firstFocus().x(), 0.001);
+    assertEquals(241.633, deformation.secondFocus().x(), 0.001);
+    assertEquals("black", deformation.focusLineColor());
   }
 
   @Test
@@ -164,13 +165,13 @@ class PhysicsTest {
 
     Vector2 acceleration = Physics.accelerationFromElasticBody(
         100,
-        new Vector2(203.029, 0),
-        new Vector2(236.971, 0),
+        new Vector2(198.367, 0),
+        new Vector2(241.633, 0),
         moon,
         1
     );
 
-    assertEquals(-0.060416, acceleration.x(), 0.000001);
+    assertEquals(-0.061401, acceleration.x(), 0.000001);
     assertEquals(0, acceleration.y(), 0.000001);
   }
 

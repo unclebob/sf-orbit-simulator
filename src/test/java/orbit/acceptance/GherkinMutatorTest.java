@@ -92,6 +92,34 @@ class GherkinMutatorTest {
   }
 
   @Test
+  void filtersTidalElongationExampleValuesThatPreserveTheOrderingProperty() {
+    assertFilteredOutAndRetained(
+        "Stronger tides make bodies more elongated",
+        Map.of(
+            "weaker_body", "low_tide",
+            "weaker_stretch_magnitude", "0.300000",
+            "weaker_major_radius_px", "15",
+            "weaker_minor_radius_px", "9",
+            "stronger_body", "high_tide",
+            "stronger_stretch_magnitude", "0.906446",
+            "stronger_major_radius_px", "22",
+            "stronger_minor_radius_px", "4"
+        ),
+        List.of(
+            "weaker_body",
+            "weaker_stretch_magnitude",
+            "weaker_major_radius_px",
+            "weaker_minor_radius_px",
+            "stronger_body",
+            "stronger_stretch_magnitude",
+            "stronger_major_radius_px",
+            "stronger_minor_radius_px"
+        ),
+        List.of()
+    );
+  }
+
+  @Test
   void filtersElasticGravityLabelsAndTargetInertialState() {
     assertFilteredOutAndRetained(
         "Elastic body gravity is split between ellipse foci",
@@ -213,7 +241,7 @@ class GherkinMutatorTest {
     );
 
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_body")));
-    assertTrue(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_radius_px")));
+    assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_radius_px")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".second_x")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".second_vx")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_x")));

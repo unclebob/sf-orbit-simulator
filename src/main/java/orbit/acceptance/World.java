@@ -23,5 +23,7 @@ public class World {
   Body elasticSource;
   Body elasticTarget;
   TidalDeformation tidalDeformation;
+  TidalDeformation weakerTidalDeformation;
+  TidalDeformation strongerTidalDeformation;
   Vector2 elasticAcceleration;
 }

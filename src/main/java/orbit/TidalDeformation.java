@@ -10,7 +10,8 @@ public record TidalDeformation(
     double stretchMagnitude,
     Vector2 axisTowardSource,
     Vector2 firstFocus,
-    Vector2 secondFocus
+    Vector2 secondFocus,
+    String focusLineColor
 ) {
   public static TidalDeformation calculate(Body body, Body source, double elasticity) {
     return calculate(body, source, elasticity, 32, 1);
@@ -28,12 +29,13 @@ public record TidalDeformation(
     if (sourceDistance == 0) {
       throw new IllegalArgumentException("tidal source cannot share body position");
     }
-    Vector2 axis = sourceDirection.times(1.0 / sourceDistance);
     Vector2 stretchVector = integratedStretch(body, source, sampleCount, gravityConstant);
     double stretchMagnitude = stretchVector.magnitude();
-    double deformation = Math.round(stretchMagnitude / elasticity * 4.0);
-    double majorRadius = body.radiusPixels() + deformation;
-    double minorRadius = Math.max(0, body.radiusPixels() - deformation);
+    Vector2 stretchAxis = stretchMagnitude == 0 ? sourceDirection.times(1.0 / sourceDistance) : stretchVector.times(1.0 / stretchMagnitude);
+    double majorDeformation = Math.round(stretchMagnitude * elasticity * 11.0);
+    double minorDeformation = Math.round(stretchMagnitude * elasticity * 9.0);
+    double majorRadius = body.radiusPixels() + majorDeformation;
+    double minorRadius = Math.max(0, body.radiusPixels() - minorDeformation);
     double focusDistance = Math.sqrt(majorRadius * majorRadius - minorRadius * minorRadius);
     return new TidalDeformation(
         body.name(),
@@ -43,9 +45,10 @@ public record TidalDeformation(
         minorRadius,
         stretchVector,
         stretchMagnitude,
-        axis,
-        body.position().plus(axis.times(focusDistance)),
-        body.position().minus(axis.times(focusDistance))
+        stretchAxis,
+        body.position().plus(stretchAxis.times(focusDistance)),
+        body.position().minus(stretchAxis.times(focusDistance)),
+        "black"
     );
   }
 
@@ -65,7 +68,7 @@ public record TidalDeformation(
       stretch += Math.abs(radialTension) * sampleMass;
     }
     Vector2 axis = source.position().minus(body.position());
-    return axis.times(1.0 / axis.magnitude()).times(stretch * 3.994194052691872);
+    return axis.times(stretch * 3.994194052691872 / axis.magnitude());
   }
 
   private static Vector2 accelerationAt(Vector2 targetPosition, Body source, double gravityConstant) {

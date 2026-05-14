@@ -58,6 +58,7 @@ public class GherkinMutator {
       "first_body",
       "first_color",
       "first_mass",
+      "first_radius_px",
       "first_vx",
       "first_vy",
       "first_x",
@@ -70,6 +71,16 @@ public class GherkinMutator {
       "second_vy",
       "second_x",
       "second_y"
+  );
+  private static final Set<String> EQUIVALENT_TIDAL_ELONGATION_KEYS = Set.of(
+      "stronger_body",
+      "stronger_major_radius_px",
+      "stronger_minor_radius_px",
+      "stronger_stretch_magnitude",
+      "weaker_body",
+      "weaker_major_radius_px",
+      "weaker_minor_radius_px",
+      "weaker_stretch_magnitude"
   );
   private static final Set<String> EQUIVALENT_RADIUS_CORRELATION_KEYS = Set.of(
       "larger_body",
@@ -101,6 +112,7 @@ public class GherkinMutator {
       Map.entry("Speed slider thumb can be dragged", Set.of("start_speed")),
       Map.entry("Body radius increases with mass", EQUIVALENT_RADIUS_CORRELATION_KEYS),
       Map.entry("Tidal forces stretch elastic bodies into ellipses", EQUIVALENT_TIDAL_DEFORMATION_KEYS),
+      Map.entry("Stronger tides make bodies more elongated", EQUIVALENT_TIDAL_ELONGATION_KEYS),
       Map.entry("Elastic body gravity is split between ellipse foci", EQUIVALENT_ELASTIC_GRAVITY_KEYS),
       Map.entry("Dragging a body previews its velocity change", EQUIVALENT_VELOCITY_PREVIEW_KEYS),
       Map.entry("Bodies outside collision range remain separate", EQUIVALENT_SEPARATE_COLLISION_KEYS),
