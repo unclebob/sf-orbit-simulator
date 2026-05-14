@@ -27,7 +27,7 @@ public class OrbitSketch extends PApplet {
 
   private OrbitSimulator simulator;
   private String draggedBodyName;
-  private boolean draggingSlider;
+  private DragAction dragAction = DragAction.NONE;
 
   public static void main(String[] args) {
     PApplet.main(OrbitSketch.class);
@@ -60,7 +60,7 @@ public class OrbitSketch extends PApplet {
   @Override
   public void mousePressed() {
     if (SPEED_SLIDER.contains(mouseX, mouseY)) {
-      draggingSlider = true;
+      dragAction = DragAction.SPEED;
       setSpeedFromMouse();
       return;
     }
@@ -72,22 +72,27 @@ public class OrbitSketch extends PApplet {
 
   @Override
   public void mouseDragged() {
-    if (draggingSlider) {
-      setSpeedFromMouse();
-    } else if (draggedBodyName != null) {
-      simulator.dragBodyToApoapsis(draggedBodyName, worldMouse(), 1.0);
-    }
+    dragAction.drag(this);
   }
 
   @Override
   public void mouseReleased() {
     draggedBodyName = null;
-    draggingSlider = false;
+    dragAction = DragAction.NONE;
   }
 
   private void pressOrbitArea() {
     simulator.bodyAt(worldMouse())
-        .ifPresentOrElse(body -> draggedBodyName = body.name(), () -> simulator.addBodyFromClick(worldMouse(), 1.0));
+        .ifPresentOrElse(this::startBodyDrag, () -> simulator.addBodyFromClick(worldMouse(), 1.0));
+  }
+
+  private void startBodyDrag(Body body) {
+    draggedBodyName = body.name();
+    dragAction = DragAction.BODY;
+  }
+
+  private void dragBody() {
+    simulator.dragBodyToApoapsis(draggedBodyName, worldMouse(), 1.0);
   }
 
   private void setSpeedFromMouse() {
@@ -202,5 +207,27 @@ public class OrbitSketch extends PApplet {
     };
 
     abstract void applyTo(OrbitSimulator simulator);
+  }
+
+  private enum DragAction {
+    NONE {
+      @Override
+      void drag(OrbitSketch sketch) {
+      }
+    },
+    SPEED {
+      @Override
+      void drag(OrbitSketch sketch) {
+        sketch.setSpeedFromMouse();
+      }
+    },
+    BODY {
+      @Override
+      void drag(OrbitSketch sketch) {
+        sketch.dragBody();
+      }
+    };
+
+    abstract void drag(OrbitSketch sketch);
   }
 }
