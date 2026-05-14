@@ -18,7 +18,7 @@ class PhysicsTest {
   }
 
   @Test
-  void velocityFirstTickUsesAccelerationBeforePosition() {
+  void symplecticTickUpdatesVelocityBeforePosition() {
     OrbitSimulator simulator = OrbitSimulator.defaults();
 
     simulator.tick(1, 1);
