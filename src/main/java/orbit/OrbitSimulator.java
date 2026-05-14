@@ -6,9 +6,12 @@ import java.util.Optional;
 
 public class OrbitSimulator {
   private final List<Body> bodies;
+  private final List<Body> initialBodies;
+  private boolean paused;
 
   public OrbitSimulator(List<Body> bodies) {
     this.bodies = new ArrayList<>(bodies);
+    this.initialBodies = new ArrayList<>(bodies);
   }
 
   public static OrbitSimulator defaults() {
@@ -28,6 +31,9 @@ public class OrbitSimulator {
   }
 
   public void tick(double seconds, double gravityConstant) {
+    if (paused) {
+      return;
+    }
     List<Vector2> accelerations = Physics.accelerations(bodies, gravityConstant);
     for (int i = 0; i < bodies.size(); i++) {
       Body body = bodies.get(i);
@@ -35,5 +41,27 @@ public class OrbitSimulator {
       Vector2 position = body.position().plus(velocity.times(seconds));
       bodies.set(i, body.withPositionAndVelocity(position, velocity));
     }
+  }
+
+  public void togglePause() {
+    paused = !paused;
+  }
+
+  public void restart() {
+    bodies.clear();
+    bodies.addAll(initialBodies);
+    paused = false;
+  }
+
+  public boolean isPaused() {
+    return paused;
+  }
+
+  public boolean isRunning() {
+    return !paused;
+  }
+
+  public String controlButtonLabel() {
+    return paused ? "Resume" : "Pause";
   }
 }

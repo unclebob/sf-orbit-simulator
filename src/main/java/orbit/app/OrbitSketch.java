@@ -1,5 +1,6 @@
 package orbit.app;
 
+import java.util.List;
 import java.util.Map;
 import orbit.Body;
 import orbit.OrbitSimulator;
@@ -12,6 +13,12 @@ public class OrbitSketch extends PApplet {
       "gray", new Paint(180, 180, 180)
   );
   private static final Paint DEFAULT_PAINT = new Paint(255, 255, 255);
+  private static final int CONTROL_Y = 16;
+  private static final int BUTTON_WIDTH = 92;
+  private static final int BUTTON_HEIGHT = 32;
+  private static final Button PAUSE_BUTTON = new Button(16, CONTROL_Y, ControlAction.PAUSE);
+  private static final Button RESTART_BUTTON = new Button(124, CONTROL_Y, ControlAction.RESTART);
+  private static final List<Button> BUTTONS = List.of(PAUSE_BUTTON, RESTART_BUTTON);
 
   private OrbitSimulator simulator;
 
@@ -32,6 +39,7 @@ public class OrbitSketch extends PApplet {
   @Override
   public void draw() {
     background(10, 12, 18);
+    drawControls();
     translate(width / 2f, height / 2f);
     simulator.tick(1.0 / 60.0, 1.0);
     for (Body body : simulator.bodies()) {
@@ -42,13 +50,75 @@ public class OrbitSketch extends PApplet {
     }
   }
 
+  @Override
+  public void mousePressed() {
+    BUTTONS.stream()
+        .filter(button -> button.contains(mouseX, mouseY))
+        .findFirst()
+        .ifPresent(button -> button.press(simulator));
+  }
+
   private void fillFor(String color) {
     PALETTE.getOrDefault(color, DEFAULT_PAINT).applyTo(this);
+  }
+
+  private void drawControls() {
+    textSize(14);
+    drawButton(PAUSE_BUTTON, simulator.controlButtonLabel());
+    drawButton(RESTART_BUTTON, "Restart");
+  }
+
+  private void drawButton(Button button, String label) {
+    fill(245);
+    stroke(80);
+    rect(button.x, button.y, BUTTON_WIDTH, BUTTON_HEIGHT, 4);
+    fill(20);
+    textAlign(CENTER, CENTER);
+    text(label, button.centerX(), button.centerY());
   }
 
   private record Paint(int red, int green, int blue) {
     void applyTo(PApplet sketch) {
       sketch.fill(red, green, blue);
     }
+  }
+
+  private record Button(int x, int y, ControlAction action) {
+    void press(OrbitSimulator simulator) {
+      action.applyTo(simulator);
+    }
+
+    boolean contains(int pointX, int pointY) {
+      return inRange(pointX, x, x + BUTTON_WIDTH) && inRange(pointY, y, y + BUTTON_HEIGHT);
+    }
+
+    private boolean inRange(int value, int minimum, int maximum) {
+      return value >= minimum && value <= maximum;
+    }
+
+    float centerX() {
+      return x + BUTTON_WIDTH / 2f;
+    }
+
+    float centerY() {
+      return y + BUTTON_HEIGHT / 2f;
+    }
+  }
+
+  private enum ControlAction {
+    PAUSE {
+      @Override
+      void applyTo(OrbitSimulator simulator) {
+        simulator.togglePause();
+      }
+    },
+    RESTART {
+      @Override
+      void applyTo(OrbitSimulator simulator) {
+        simulator.restart();
+      }
+    };
+
+    abstract void applyTo(OrbitSimulator simulator);
   }
 }

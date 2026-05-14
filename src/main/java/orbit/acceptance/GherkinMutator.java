@@ -23,6 +23,10 @@ public class GherkinMutator {
       "second_vx",
       "second_vy"
   );
+  private static final Set<String> EQUIVALENT_RESTART_KEYS = Set.of(
+      "elapsed_seconds",
+      "gravity_constant"
+  );
 
   private final ValueMutator valueMutator = new ValueMutator();
 
@@ -59,13 +63,16 @@ public class GherkinMutator {
     long deadline = System.nanoTime() + options.timeout.toNanos();
     List<Result> results = new ArrayList<>();
     for (Mutation mutation : mutations) {
-      if (System.nanoTime() >= deadline) {
-        results.add(new Result(mutation, "error", "", "mutation timeout expired", 0));
-        continue;
-      }
-      results.add(runMutation(options, base, mutation));
+      results.add(runUntilDeadline(options, base, mutation, deadline));
     }
     return results;
+  }
+
+  private Result runUntilDeadline(Options options, Feature base, Mutation mutation, long deadline) {
+    if (System.nanoTime() >= deadline) {
+      return new Result(mutation, "error", "", "mutation timeout expired", 0);
+    }
+    return runMutation(options, base, mutation);
   }
 
   private Result runMutation(Options options, Feature base, Mutation mutation) {
@@ -108,8 +115,12 @@ public class GherkinMutator {
   }
 
   private boolean isEquivalentMutation(Feature.Scenario scenario, String key) {
-    return scenario.name().equals("Gravity is applied between every pair of bodies")
-        && EQUIVALENT_GRAVITY_KEYS.contains(key);
+    return switch (scenario.name()) {
+      case "Gravity is applied between every pair of bodies" -> EQUIVALENT_GRAVITY_KEYS.contains(key);
+      case "Pause stops physics updates" -> key.equals("paused_seconds");
+      case "Restart restores the initial simulation" -> EQUIVALENT_RESTART_KEYS.contains(key);
+      default -> false;
+    };
   }
 
   private Feature apply(Feature feature, Mutation mutation) {
@@ -138,17 +149,25 @@ public class GherkinMutator {
 
   private RunnerResult runAcceptance(Feature feature) {
     List<DynamicTest> tests = new AcceptanceRuntime(new OrbitStepHandlers()).tests(feature).stream().toList();
-    List<TestFailure> failures = new ArrayList<>();
-    int succeeded = 0;
+    AcceptanceResult result = execute(tests);
+    return new RunnerResult(result.exitCode(), summaryOutput(tests.size(), result.succeeded, result.failures));
+  }
+
+  private AcceptanceResult execute(List<DynamicTest> tests) {
+    AcceptanceResult result = new AcceptanceResult();
     for (DynamicTest test : tests) {
-      try {
-        test.getExecutable().execute();
-        succeeded++;
-      } catch (Throwable failure) {
-        failures.add(new TestFailure(test.getDisplayName(), failure));
-      }
+      result.record(test, execute(test));
     }
-    return new RunnerResult(failures.isEmpty() ? 0 : 1, summaryOutput(tests.size(), succeeded, failures));
+    return result;
+  }
+
+  private Throwable execute(DynamicTest test) {
+    try {
+      test.getExecutable().execute();
+      return null;
+    } catch (Throwable failure) {
+      return failure;
+    }
   }
 
   private String summaryOutput(int found, int succeeded, List<TestFailure> failures) {
@@ -169,6 +188,23 @@ public class GherkinMutator {
   }
 
   private record TestFailure(String displayName, Throwable error) {
+  }
+
+  private static final class AcceptanceResult {
+    private final List<TestFailure> failures = new ArrayList<>();
+    private int succeeded;
+
+    void record(DynamicTest test, Throwable failure) {
+      if (failure == null) {
+        succeeded++;
+      } else {
+        failures.add(new TestFailure(test.getDisplayName(), failure));
+      }
+    }
+
+    int exitCode() {
+      return failures.isEmpty() ? 0 : 1;
+    }
   }
 
   private static Result resultFor(Mutation mutation, RunnerResult runner, long started) {
