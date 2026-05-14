@@ -42,16 +42,16 @@ public class OrbitStepHandlers implements StepHandlers {
       ),
       Map.entry("the default orbit simulator bodies are running", (world, example) -> world.simulator = OrbitSimulator.defaults()),
       Map.entry(
-          "the simulator has advanced by <before_pause_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration",
+          "the simulator has advanced by <before_pause_seconds> seconds using gravity constant <gravity_constant> and symplectic integration",
           (world, example) -> tick(world, example, "before_pause_seconds")
       ),
       Map.entry(
-          "the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration",
+          "the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant> and symplectic integration",
           (world, example) -> tick(world, example, "elapsed_seconds")
       ),
       Map.entry("the pause button is pressed", (world, example) -> world.simulator.togglePause()),
       Map.entry(
-          "the simulator attempts to advance by <paused_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration",
+          "the simulator attempts to advance by <paused_seconds> seconds using gravity constant <gravity_constant> and symplectic integration",
           (world, example) -> tick(world, example, "paused_seconds")
       ),
       Map.entry("the simulation is paused", (world, example) -> assertTrue(world.simulator.isPaused(), "simulation should be paused")),
@@ -60,7 +60,7 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry("the control button label is <resume_label>", (world, example) -> assertControlLabel(world, example, "resume_label")),
       Map.entry("the control button label is <pause_label>", (world, example) -> assertControlLabel(world, example, "pause_label")),
       Map.entry(
-          "the simulator advances by <seconds> seconds using gravity constant <gravity_constant> and velocity-first integration",
+          "the simulator advances by <seconds> seconds using gravity constant <gravity_constant> and symplectic integration",
           (world, example) -> tick(world, example, "seconds")
       ),
       Map.entry("the body <body> has position <x>, <y> and velocity <vx>, <vy>", this::assertBodyState),
@@ -77,7 +77,7 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> world.simulator.setSpeedMultiplier((int) number(example, "start_speed"))
       ),
       Map.entry(
-          "the simulator advances display time by <display_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration",
+          "the simulator advances display time by <display_seconds> seconds using gravity constant <gravity_constant> and symplectic integration",
           (world, example) -> world.simulator.advanceDisplayTime(number(example, "display_seconds"), number(example, "gravity_constant"))
       ),
       Map.entry(
