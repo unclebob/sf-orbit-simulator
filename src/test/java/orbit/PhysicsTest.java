@@ -56,4 +56,29 @@ class PhysicsTest {
     assertEquals(0, earth.velocity().x(), 0.000001);
     assertEquals("Pause", simulator.controlButtonLabel());
   }
+
+  @Test
+  void speedMultiplierScalesDisplayTimeIntoPhysicsTime() {
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+    simulator.setSpeedMultiplier(2);
+
+    simulator.advanceDisplayTime(1, 1);
+
+    Body earth = simulator.findBody("earth").orElseThrow();
+    assertEquals(2, simulator.elapsedPhysicsSeconds(), 0.000001);
+    assertEquals(219.8368, earth.position().x(), 0.0001);
+    assertEquals(6.0302, earth.position().y(), 0.0001);
+    assertEquals("2X", simulator.speedLabel());
+  }
+
+  @Test
+  void speedSliderDefaultsToOneThroughTwentyInWholeSteps() {
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+
+    assertEquals(1, OrbitSimulator.MINIMUM_SPEED);
+    assertEquals(20, OrbitSimulator.MAXIMUM_SPEED);
+    assertEquals(1, OrbitSimulator.SPEED_STEP);
+    assertEquals(1, simulator.speedMultiplier());
+    assertEquals("1X", simulator.speedLabel());
+  }
 }

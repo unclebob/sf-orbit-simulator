@@ -63,7 +63,24 @@ public class OrbitStepHandlers implements StepHandlers {
           "the simulator advances by <seconds> seconds using gravity constant <gravity_constant> and velocity-first integration",
           (world, example) -> tick(world, example, "seconds")
       ),
-      Map.entry("the body <body> has position <x>, <y> and velocity <vx>, <vy>", this::assertBodyState)
+      Map.entry("the body <body> has position <x>, <y> and velocity <vx>, <vy>", this::assertBodyState),
+      Map.entry(
+          "the speed slider has minimum <minimum_speed>, maximum <maximum_speed>, step <speed_step>, value <default_speed>, and label <default_label>",
+          this::assertDefaultSpeedSlider
+      ),
+      Map.entry(
+          "the speed slider is set to <speed_multiplier>",
+          (world, example) -> world.simulator.setSpeedMultiplier((int) number(example, "speed_multiplier"))
+      ),
+      Map.entry(
+          "the simulator advances display time by <display_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration",
+          (world, example) -> world.simulator.advanceDisplayTime(number(example, "display_seconds"), number(example, "gravity_constant"))
+      ),
+      Map.entry(
+          "the simulator has advanced physics time by <physics_seconds> seconds",
+          (world, example) -> assertNumber(example, "physics_seconds", world.simulator.elapsedPhysicsSeconds())
+      ),
+      Map.entry("the speed slider label is <speed_label>", (world, example) -> assertEquals(text(example, "speed_label"), world.simulator.speedLabel()))
   );
 
   @Override
@@ -85,6 +102,14 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private void assertControlLabel(World world, Map<String, String> example, String labelKey) {
     assertEquals(text(example, labelKey), world.simulator.controlButtonLabel());
+  }
+
+  private void assertDefaultSpeedSlider(World world, Map<String, String> example) {
+    assertNumber(example, "minimum_speed", OrbitSimulator.MINIMUM_SPEED);
+    assertNumber(example, "maximum_speed", OrbitSimulator.MAXIMUM_SPEED);
+    assertNumber(example, "speed_step", OrbitSimulator.SPEED_STEP);
+    assertNumber(example, "default_speed", world.simulator.speedMultiplier());
+    assertEquals(text(example, "default_label"), world.simulator.speedLabel());
   }
 
   private void assertVisibleBody(World world, Map<String, String> example) {
