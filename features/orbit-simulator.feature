@@ -77,21 +77,22 @@ Feature: 2D orbit simulator
       | 3               | 1                | Pause       | moon  | 264 | 0 | 0  | 4.5227 |
 
   Scenario Outline: Speed slider is available with a default multiplier
-    Then the speed slider has minimum <minimum_speed>, maximum <maximum_speed>, step <speed_step>, and value <default_speed>
+    Then the speed slider has minimum <minimum_speed>, maximum <maximum_speed>, step <speed_step>, value <default_speed>, and label <default_label>
 
     Examples:
-      | minimum_speed | maximum_speed | speed_step | default_speed |
-      | 0.25          | 4             | 0.25       | 1             |
+      | minimum_speed | maximum_speed | speed_step | default_speed | default_label |
+      | 1             | 20            | 1          | 1             | 1X            |
 
   Scenario Outline: Speed slider scales simulated time
     Given the default orbit simulator bodies are running
     When the speed slider is set to <speed_multiplier>
     And the simulator advances display time by <display_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration
     Then the simulator has advanced physics time by <physics_seconds> seconds
+    And the speed slider label is <speed_label>
     And the body <body> has position <x>, <y> and velocity <vx>, <vy>
 
     Examples:
-      | speed_multiplier | display_seconds | gravity_constant | physics_seconds | body  | x        | y      | vx       | vy     |
-      | 2                | 1               | 1                | 2               | earth | 219.8368 | 6.0302 | -0.0816  | 3.0151 |
-      | 2                | 1               | 1                | 2               | moon  | 263.6786 | 9.0454 | -0.1607  | 4.5227 |
-      | 2                | 1               | 1                | 2               | sun   | 0.0083   | 0      | 0.0042   | 0      |
+      | speed_multiplier | display_seconds | gravity_constant | physics_seconds | speed_label | body  | x        | y      | vx       | vy     |
+      | 2                | 1               | 1                | 2               | 2X          | earth | 219.8368 | 6.0302 | -0.0816  | 3.0151 |
+      | 2                | 1               | 1                | 2               | 2X          | moon  | 263.6786 | 9.0454 | -0.1607  | 4.5227 |
+      | 2                | 1               | 1                | 2               | 2X          | sun   | 0.0083   | 0      | 0.0042   | 0      |
