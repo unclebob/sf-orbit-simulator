@@ -142,15 +142,11 @@ class PhysicsTest {
 
   @Test
   void collidingBodiesMergeWithConservedMassAreaMomentumAndCenterOfMass() {
-    OrbitSimulator simulator = new OrbitSimulator(List.of(
-        new Body("alpha", "blue", 4, 3, new Vector2(0, 0), new Vector2(2, 0)),
-        new Body("beta", "gray", 3, 1, new Vector2(4, 0), new Vector2(-2, 0))
-    ));
+    OrbitSimulator simulator = collisionSimulator(2, 4, -2);
 
     simulator.resolveCollisions();
 
-    assertEquals(1, simulator.bodyCount());
-    Body merged = simulator.bodies().getFirst();
+    Body merged = singleMergedBody(simulator);
     assertEquals("blue", merged.color());
     assertEquals(5, merged.radiusPixels(), 0.000001);
     assertEquals(4, merged.mass(), 0.000001);
@@ -158,6 +154,29 @@ class PhysicsTest {
     assertEquals(0, merged.position().y(), 0.000001);
     assertEquals(1, merged.velocity().x(), 0.000001);
     assertEquals(0, merged.velocity().y(), 0.000001);
+  }
+
+  @Test
+  void tickResolvesCollisionsAfterUpdatingPositions() {
+    OrbitSimulator simulator = collisionSimulator(3, 10, -3);
+
+    simulator.tick(1, 0);
+
+    Body merged = singleMergedBody(simulator);
+    assertEquals(4, merged.position().x(), 0.000001);
+    assertEquals(1.5, merged.velocity().x(), 0.000001);
+  }
+
+  private static OrbitSimulator collisionSimulator(double alphaVelocityX, double betaX, double betaVelocityX) {
+    return new OrbitSimulator(List.of(
+        new Body("alpha", "blue", 4, 3, new Vector2(0, 0), new Vector2(alphaVelocityX, 0)),
+        new Body("beta", "gray", 3, 1, new Vector2(betaX, 0), new Vector2(betaVelocityX, 0))
+    ));
+  }
+
+  private static Body singleMergedBody(OrbitSimulator simulator) {
+    assertEquals(1, simulator.bodyCount());
+    return simulator.bodies().getFirst();
   }
 
   @Test
