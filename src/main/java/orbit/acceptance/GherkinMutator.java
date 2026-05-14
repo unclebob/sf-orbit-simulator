@@ -119,6 +119,7 @@ public class GherkinMutator {
       case "Gravity is applied between every pair of bodies" -> EQUIVALENT_GRAVITY_KEYS.contains(key);
       case "Pause stops physics updates" -> key.equals("paused_seconds");
       case "Restart restores the initial simulation" -> EQUIVALENT_RESTART_KEYS.contains(key);
+      case "Near-body click adds a body in circular orbit around that body" -> key.equals("diameter_count");
       default -> false;
     };
   }

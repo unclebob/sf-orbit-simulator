@@ -26,6 +26,8 @@ public class OrbitSketch extends PApplet {
   private static final List<Button> BUTTONS = List.of(PAUSE_BUTTON, RESTART_BUTTON);
 
   private OrbitSimulator simulator;
+  private String draggedBodyName;
+  private boolean draggingSlider;
 
   public static void main(String[] args) {
     PApplet.main(OrbitSketch.class);
@@ -57,16 +59,43 @@ public class OrbitSketch extends PApplet {
 
   @Override
   public void mousePressed() {
+    if (SPEED_SLIDER.contains(mouseX, mouseY)) {
+      draggingSlider = true;
+      setSpeedFromMouse();
+      return;
+    }
     BUTTONS.stream()
         .filter(button -> button.contains(mouseX, mouseY))
         .findFirst()
-        .ifPresentOrElse(button -> button.press(simulator), this::pressSlider);
+        .ifPresentOrElse(button -> button.press(simulator), this::pressOrbitArea);
   }
 
-  private void pressSlider() {
-    if (SPEED_SLIDER.contains(mouseX, mouseY)) {
-      simulator.setSpeedMultiplier(SPEED_SLIDER.speedFrom(mouseX, this));
+  @Override
+  public void mouseDragged() {
+    if (draggingSlider) {
+      setSpeedFromMouse();
+    } else if (draggedBodyName != null) {
+      simulator.dragBodyToApoapsis(draggedBodyName, worldMouse(), 1.0);
     }
+  }
+
+  @Override
+  public void mouseReleased() {
+    draggedBodyName = null;
+    draggingSlider = false;
+  }
+
+  private void pressOrbitArea() {
+    simulator.bodyAt(worldMouse())
+        .ifPresentOrElse(body -> draggedBodyName = body.name(), () -> simulator.addBodyFromClick(worldMouse(), 1.0));
+  }
+
+  private void setSpeedFromMouse() {
+    simulator.setSpeedMultiplier(SPEED_SLIDER.speedFrom(mouseX, this));
+  }
+
+  private orbit.Vector2 worldMouse() {
+    return new orbit.Vector2(mouseX - width / 2.0, mouseY - height / 2.0);
   }
 
   private void fillFor(String color) {

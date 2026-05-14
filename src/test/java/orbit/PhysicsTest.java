@@ -81,4 +81,45 @@ class PhysicsTest {
     assertEquals(1, simulator.speedMultiplier());
     assertEquals("1X", simulator.speedLabel());
   }
+
+  @Test
+  void emptyClickAddsCircularOrbitBodyAroundSun() {
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+
+    Body body = simulator.addBodyInCircularOrbit(new Vector2(300, 0), "sun", 1);
+
+    assertEquals("body_1", body.name());
+    assertEquals("sun", body.orbitCenter());
+    assertEquals(300, body.periapsisDistance(), 0.000001);
+    assertEquals(0, body.velocity().x(), 0.0001);
+    assertEquals(2.5820, body.velocity().y(), 0.0001);
+    assertEquals(4, simulator.bodyCount());
+  }
+
+  @Test
+  void nearBodyClickAddsCircularOrbitBodyAroundThatBody() {
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+
+    Body body = simulator.addBodyInCircularOrbit(new Vector2(220, 60), "earth", 1);
+
+    assertEquals("earth", body.orbitCenter());
+    assertEquals(-1.2910, body.velocity().x(), 0.0001);
+    assertEquals(3.0151, body.velocity().y(), 0.0001);
+  }
+
+  @Test
+  void draggingBodyToApoapsisKeepsOriginalPeriapsisAndSetsApoapsisVelocity() {
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+
+    Body earth = simulator.dragBodyToApoapsis("earth", new Vector2(330, 0), 1);
+    OrbitSimulator moonSimulator = OrbitSimulator.defaults();
+    Body moon = moonSimulator.dragBodyToApoapsis("moon", new Vector2(286, 0), 1);
+
+    assertEquals(220, earth.periapsisDistance(), 0.000001);
+    assertEquals(330, simulator.apoapsisDistance("earth"), 0.000001);
+    assertEquals(2.2020, earth.velocity().y(), 0.0001);
+    assertEquals(44, moon.periapsisDistance(), 0.000001);
+    assertEquals(66, moonSimulator.apoapsisDistance("moon"), 0.000001);
+    assertEquals(4.1161, moon.velocity().y(), 0.0001);
+  }
 }

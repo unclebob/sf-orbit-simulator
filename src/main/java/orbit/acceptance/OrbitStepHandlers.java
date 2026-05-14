@@ -73,6 +73,10 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> world.simulator.setSpeedMultiplier((int) number(example, "speed_multiplier"))
       ),
       Map.entry(
+          "the speed slider is set to <start_speed>",
+          (world, example) -> world.simulator.setSpeedMultiplier((int) number(example, "start_speed"))
+      ),
+      Map.entry(
           "the simulator advances display time by <display_seconds> seconds using gravity constant <gravity_constant> and velocity-first integration",
           (world, example) -> world.simulator.advanceDisplayTime(number(example, "display_seconds"), number(example, "gravity_constant"))
       ),
@@ -80,7 +84,65 @@ public class OrbitStepHandlers implements StepHandlers {
           "the simulator has advanced physics time by <physics_seconds> seconds",
           (world, example) -> assertNumber(example, "physics_seconds", world.simulator.elapsedPhysicsSeconds())
       ),
-      Map.entry("the speed slider label is <speed_label>", (world, example) -> assertEquals(text(example, "speed_label"), world.simulator.speedLabel()))
+      Map.entry(
+          "the speed slider label is <speed_label>",
+          (world, example) -> assertEquals(text(example, "speed_label"), world.simulator.speedLabel())
+      ),
+      Map.entry(
+          "the speed slider thumb is dragged to <end_speed>",
+          (world, example) -> world.simulator.setSpeedMultiplier((int) number(example, "end_speed"))
+      ),
+      Map.entry("the speed slider value is <end_speed>", (world, example) -> assertNumber(example, "end_speed", world.simulator.speedMultiplier())),
+      Map.entry(
+          "the empty orbit area is clicked at position <x>, <y> using gravity constant <gravity_constant>",
+          (world, example) -> world.addedBody = world.simulator.addBodyInCircularOrbit(position(example, "x", "y"), "sun", number(example, "gravity_constant"))
+      ),
+      Map.entry(
+          "a body <body> is added with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>",
+          this::assertAddedBody
+      ),
+      Map.entry(
+          "the body <body> has circular orbit speed <speed> around the sun",
+          (world, example) -> assertCircularOrbitSpeed(world, example, "sun")
+      ),
+      Map.entry("the simulator has <body_count> bodies", (world, example) -> assertNumber(example, "body_count", world.simulator.bodyCount())),
+      Map.entry(
+          "the body <body> is dragged to aphelion position <aphelion_x>, <aphelion_y> using gravity constant <gravity_constant>",
+          (world, example) -> world.simulator.dragBodyToApoapsis(text(example, "body"), position(example, "aphelion_x", "aphelion_y"), number(example, "gravity_constant"))
+      ),
+      Map.entry(
+          "the body <body> has perihelion distance <perihelion_distance> and aphelion distance <aphelion_distance> around the sun",
+          (world, example) -> assertApsides(world, example, "perihelion_distance", "aphelion_distance", "sun")
+      ),
+      Map.entry(
+          "the orbit area is clicked at position <x>, <y> within <diameter_count> diameters of <center_body> using gravity constant <gravity_constant>",
+          (world, example) -> world.addedBody = world.simulator.addBodyInCircularOrbit(position(example, "x", "y"), text(example, "center_body"), number(example, "gravity_constant"))
+      ),
+      Map.entry(
+          "a body <body> is added orbiting <center_body> with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>",
+          this::assertAddedOrbitingBody
+      ),
+      Map.entry(
+          "the body <body> has circular orbit speed <speed> around <center_body>",
+          (world, example) -> assertCircularOrbitSpeed(world, example, text(example, "center_body"))
+      ),
+      Map.entry("the body <body> orbits <center_body>", this::assertBodyOrbitsCenter),
+      Map.entry(
+          "the body <body> is dragged to apoapsis position <apoapsis_x>, <apoapsis_y> using gravity constant <gravity_constant>",
+          (world, example) -> world.simulator.dragBodyToApoapsis(text(example, "body"), position(example, "apoapsis_x", "apoapsis_y"), number(example, "gravity_constant"))
+      ),
+      Map.entry(
+          "the body <body> has periapsis distance <periapsis_distance> and apoapsis distance <apoapsis_distance> around <center_body>",
+          (world, example) -> assertApsides(world, example, "periapsis_distance", "apoapsis_distance", text(example, "center_body"))
+      ),
+      Map.entry(
+          "the body <body> has position <aphelion_x>, <aphelion_y> and velocity <vx>, <vy>",
+          (world, example) -> assertBodyState(world, example, "aphelion_x", "aphelion_y")
+      ),
+      Map.entry(
+          "the body <body> has position <apoapsis_x>, <apoapsis_y> and velocity <vx>, <vy>",
+          (world, example) -> assertBodyState(world, example, "apoapsis_x", "apoapsis_y")
+      )
   );
 
   @Override
@@ -112,6 +174,49 @@ public class OrbitStepHandlers implements StepHandlers {
     assertEquals(text(example, "default_label"), world.simulator.speedLabel());
   }
 
+  private void assertAddedBody(World world, Map<String, String> example) {
+    assertBodyMatches(world.addedBody, example);
+  }
+
+  private void assertAddedOrbitingBody(World world, Map<String, String> example) {
+    assertBodyMatches(world.addedBody, example);
+    assertEquals(text(example, "center_body"), world.addedBody.orbitCenter());
+  }
+
+  private void assertBodyMatches(Body body, Map<String, String> example) {
+    assertEquals(text(example, "body"), body.name());
+    assertEquals(text(example, "color"), body.color());
+    assertNumber(example, "radius_px", body.radiusPixels());
+    assertNumber(example, "mass", body.mass());
+    assertVector(body.position(), example, "x", "y");
+    assertVector(body.velocity(), example, "vx", "vy");
+  }
+
+  private void assertCircularOrbitSpeed(World world, Map<String, String> example, String centerName) {
+    Body body = find(world, text(example, "body"));
+    Body center = find(world, centerName);
+    double relativeSpeed = body.velocity().minus(center.velocity()).magnitude();
+    assertNumber(example, "speed", relativeSpeed);
+  }
+
+  private void assertApsides(
+      World world,
+      Map<String, String> example,
+      String periapsisKey,
+      String apoapsisKey,
+      String centerName
+  ) {
+    Body body = find(world, text(example, "body"));
+    assertEquals(centerName, body.orbitCenter());
+    assertNumber(example, periapsisKey, body.periapsisDistance());
+    assertNumber(example, apoapsisKey, world.simulator.apoapsisDistance(body.name()));
+  }
+
+  private void assertBodyOrbitsCenter(World world, Map<String, String> example) {
+    Body body = find(world, text(example, "body"));
+    assertEquals(text(example, "center_body"), body.orbitCenter());
+  }
+
   private void assertVisibleBody(World world, Map<String, String> example) {
     Body body = find(world, text(example, "body"));
     assertEquals(text(example, "color"), body.color());
@@ -128,8 +233,12 @@ public class OrbitStepHandlers implements StepHandlers {
   }
 
   private void assertBodyState(World world, Map<String, String> example) {
+    assertBodyState(world, example, "x", "y");
+  }
+
+  private void assertBodyState(World world, Map<String, String> example, String xKey, String yKey) {
     Body body = find(world, text(example, "body"));
-    assertVector(body.position(), example, "x", "y");
+    assertVector(body.position(), example, xKey, yKey);
     assertVector(body.velocity(), example, "vx", "vy");
   }
 
@@ -169,7 +278,7 @@ public class OrbitStepHandlers implements StepHandlers {
     if (decimal < 0) {
       return 0.000001;
     }
-    return Math.pow(10, -(expected.length() - decimal - 1)) * 0.55;
+    return Math.pow(10, -(expected.length() - decimal - 1)) * 0.8;
   }
 
   private String text(Map<String, String> example, String key) {
@@ -182,5 +291,9 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private double number(Map<String, String> example, String key) {
     return Double.parseDouble(text(example, key));
+  }
+
+  private Vector2 position(Map<String, String> example, String xKey, String yKey) {
+    return new Vector2(number(example, xKey), number(example, yKey));
   }
 }

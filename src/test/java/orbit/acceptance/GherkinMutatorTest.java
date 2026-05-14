@@ -71,6 +71,29 @@ class GherkinMutatorTest {
   }
 
   @Test
+  void filtersNearBodyClickPreconditionDistance() {
+    Feature feature = new Feature(
+        "Example",
+        List.of(),
+        List.of(new Feature.Scenario(
+            "Near-body click adds a body in circular orbit around that body",
+            List.of(),
+            List.of(Map.of(
+                "diameter_count", "4",
+                "center_body", "earth",
+                "x", "220",
+                "y", "60"
+            ))
+        ))
+    );
+
+    List<String> paths = new GherkinMutator().mutations(feature).stream().map(Mutation::path).toList();
+
+    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".diameter_count")));
+    assertTrue(paths.stream().anyMatch(path -> path.endsWith(".center_body")));
+  }
+
+  @Test
   void reportsTextAndJsonResults() {
     Mutation mutation = new Mutation("m\"1", "$.scenarios[0].examples[0].mass", "one\n1", "two\t2");
     List<GherkinMutator.Result> results = List.of(
