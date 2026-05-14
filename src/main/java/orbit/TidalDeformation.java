@@ -31,7 +31,7 @@ public record TidalDeformation(
     }
     Vector2 stretchVector = integratedStretch(body, source, sampleCount, gravityConstant);
     double stretchMagnitude = stretchVector.magnitude();
-    Vector2 stretchAxis = stretchMagnitude == 0 ? sourceDirection.times(1.0 / sourceDistance) : stretchVector.times(1.0 / stretchMagnitude);
+    Vector2 stretchAxis = stretchAxis(sourceDirection, sourceDistance, stretchVector, stretchMagnitude);
     double majorDeformation = Math.round(stretchMagnitude * elasticity * 11.0);
     double minorDeformation = Math.round(stretchMagnitude * elasticity * 9.0);
     double majorRadius = body.radiusPixels() + majorDeformation;
@@ -69,6 +69,18 @@ public record TidalDeformation(
     }
     Vector2 axis = source.position().minus(body.position());
     return axis.times(stretch * 3.994194052691872 / axis.magnitude());
+  }
+
+  private static Vector2 stretchAxis(
+      Vector2 sourceDirection,
+      double sourceDistance,
+      Vector2 stretchVector,
+      double stretchMagnitude
+  ) {
+    if (stretchMagnitude == 0) {
+      return sourceDirection.times(1.0 / sourceDistance);
+    }
+    return stretchVector.times(1.0 / stretchMagnitude);
   }
 
   private static Vector2 accelerationAt(Vector2 targetPosition, Body source, double gravityConstant) {
