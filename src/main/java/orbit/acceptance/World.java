@@ -3,6 +3,7 @@ package orbit.acceptance;
 import java.util.List;
 import orbit.Body;
 import orbit.OrbitSimulator;
+import orbit.TidalDeformation;
 import orbit.Vector2;
 
 public class World {
@@ -17,4 +18,10 @@ public class World {
   Vector2 dragEnd;
   Body firstCollisionBody;
   Body secondCollisionBody;
+  Body tidalBody;
+  Body tidalSource;
+  Body elasticSource;
+  Body elasticTarget;
+  TidalDeformation tidalDeformation;
+  Vector2 elasticAcceleration;
 }

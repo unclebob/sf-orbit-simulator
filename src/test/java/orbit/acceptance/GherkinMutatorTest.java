@@ -71,6 +71,45 @@ class GherkinMutatorTest {
     );
   }
 
+  @Test
+  void filtersTidalDeformationSetupValuesThatPreserveTheRenderedEllipse() {
+    assertFilteredOutAndRetained(
+        "Tidal forces stretch elastic bodies into ellipses",
+        Map.ofEntries(
+            Map.entry("body", "earth"),
+            Map.entry("mass", "100"),
+            Map.entry("radius_px", "12"),
+            Map.entry("elasticity", "0.2"),
+            Map.entry("source_body", "sun"),
+            Map.entry("source_mass", "2000"),
+            Map.entry("source_x", "0"),
+            Map.entry("source_y", "0"),
+            Map.entry("major_radius_px", "14")
+        ),
+        List.of("body", "mass", "source_body", "source_mass", "source_x"),
+        List.of("radius_px", "elasticity", "source_y", "major_radius_px")
+    );
+  }
+
+  @Test
+  void filtersElasticGravityLabelsAndTargetInertialState() {
+    assertFilteredOutAndRetained(
+        "Elastic body gravity is split between ellipse foci",
+        Map.of(
+            "source_body", "earth",
+            "source_mass", "100",
+            "target_body", "moon",
+            "target_mass", "1",
+            "target_vx", "0",
+            "target_vy", "4.5227",
+            "target_x", "264",
+            "target_ax", "-0.060019"
+        ),
+        List.of("source_body", "target_body", "target_mass", "target_vx", "target_vy"),
+        List.of("source_mass", "target_x", "target_ax")
+    );
+  }
+
   private static void assertFilteredOutAndRetained(
       String scenarioName,
       Map<String, String> example,
@@ -177,7 +216,7 @@ class GherkinMutatorTest {
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_radius_px")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".second_x")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".second_vx")));
-    assertTrue(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_x")));
+    assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_x")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[1]") && path.endsWith(".second_color")));
     assertTrue(paths.stream().anyMatch(path -> path.contains("scenarios[1]") && path.endsWith(".first_mass")));
   }

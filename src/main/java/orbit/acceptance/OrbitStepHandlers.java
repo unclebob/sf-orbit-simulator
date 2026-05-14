@@ -9,6 +9,7 @@ import java.util.function.BiConsumer;
 import orbit.Body;
 import orbit.OrbitSimulator;
 import orbit.Physics;
+import orbit.TidalDeformation;
 import orbit.Vector2;
 
 public class OrbitStepHandlers implements StepHandlers {
@@ -30,6 +31,39 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry(
           "<larger_body> has greater radius than <smaller_body>",
           this::assertLargerBodyHasGreaterRadius
+      ),
+      Map.entry(
+          "a body <body> has mass <mass>, radius <radius_px>, position <x>, <y>, and elasticity <elasticity>",
+          this::setTidalBody
+      ),
+      Map.entry(
+          "a tidal source <source_body> has mass <source_mass> and position <source_x>, <source_y>",
+          this::setTidalSource
+      ),
+      Map.entry("tidal deformation is calculated", this::calculateTidalDeformation),
+      Map.entry(
+          "the body <body> is rendered as an ellipse centered at <x>, <y> with major radius <major_radius_px>, minor radius <minor_radius_px>, and major axis pointing toward <source_body>",
+          this::assertTidalEllipse
+      ),
+      Map.entry(
+          "the body <body> has gravity foci at <first_focus_x>, <first_focus_y> and <second_focus_x>, <second_focus_y>",
+          this::assertTidalFoci
+      ),
+      Map.entry(
+          "an elastic body <source_body> has mass <source_mass>, first focus <first_focus_x>, <first_focus_y>, and second focus <second_focus_x>, <second_focus_y>",
+          this::setElasticSource
+      ),
+      Map.entry(
+          "a body <target_body> has mass <target_mass>, position <target_x>, <target_y>, and velocity <target_vx>, <target_vy>",
+          this::setElasticTarget
+      ),
+      Map.entry(
+          "gravitational acceleration from <source_body> to <target_body> is calculated using gravity constant <gravity_constant>",
+          this::calculateElasticAcceleration
+      ),
+      Map.entry(
+          "the acceleration of <target_body> is <target_ax>, <target_ay>",
+          (world, example) -> assertVector(world.elasticAcceleration, example, "target_ax", "target_ay")
       ),
       Map.entry("the body <orbiter> starts <distance> units from <center>", this::assertDistance),
       Map.entry(
@@ -264,6 +298,93 @@ public class OrbitStepHandlers implements StepHandlers {
     Body smaller = find(world.bodies, text(example, "smaller_body"));
     Body larger = find(world.bodies, text(example, "larger_body"));
     assertTrue(larger.radiusPixels() > smaller.radiusPixels(), "larger mass should render with larger radius");
+  }
+
+  private void setTidalBody(World world, Map<String, String> example) {
+    world.tidalBody = new Body(
+        text(example, "body"),
+        "",
+        number(example, "radius_px"),
+        number(example, "mass"),
+        position(example, "x", "y"),
+        new Vector2(0, 0)
+    );
+  }
+
+  private void setTidalSource(World world, Map<String, String> example) {
+    world.tidalSource = new Body(
+        text(example, "source_body"),
+        "",
+        0,
+        number(example, "source_mass"),
+        position(example, "source_x", "source_y"),
+        new Vector2(0, 0)
+    );
+  }
+
+  private void calculateTidalDeformation(World world, Map<String, String> example) {
+    world.tidalDeformation = TidalDeformation.calculate(world.tidalBody, world.tidalSource, number(example, "elasticity"));
+  }
+
+  private void assertTidalEllipse(World world, Map<String, String> example) {
+    TidalDeformation deformation = world.tidalDeformation;
+    assertEquals(text(example, "body"), deformation.bodyName());
+    assertEquals(text(example, "source_body"), deformation.sourceName());
+    assertVector(deformation.center(), example, "x", "y");
+    assertNumber(example, "major_radius_px", deformation.majorRadiusPixels());
+    assertNumber(example, "minor_radius_px", deformation.minorRadiusPixels());
+    Vector2 expectedAxis = world.tidalSource.position().minus(world.tidalBody.position());
+    assertTrue(deformation.axisTowardSource().minus(expectedAxis.times(1.0 / expectedAxis.magnitude())).magnitude() < TOLERANCE);
+  }
+
+  private void assertTidalFoci(World world, Map<String, String> example) {
+    assertEquals(text(example, "body"), world.tidalDeformation.bodyName());
+    assertVector(world.tidalDeformation.firstFocus(), example, "first_focus_x", "first_focus_y");
+    assertVector(world.tidalDeformation.secondFocus(), example, "second_focus_x", "second_focus_y");
+  }
+
+  private void setElasticSource(World world, Map<String, String> example) {
+    world.elasticSource = new Body(
+        text(example, "source_body"),
+        "",
+        0,
+        number(example, "source_mass"),
+        new Vector2(0, 0),
+        new Vector2(0, 0)
+    );
+    world.tidalDeformation = new TidalDeformation(
+        text(example, "source_body"),
+        "",
+        new Vector2(0, 0),
+        0,
+        0,
+        new Vector2(1, 0),
+        position(example, "first_focus_x", "first_focus_y"),
+        position(example, "second_focus_x", "second_focus_y")
+    );
+  }
+
+  private void setElasticTarget(World world, Map<String, String> example) {
+    world.elasticTarget = new Body(
+        text(example, "target_body"),
+        "",
+        0,
+        number(example, "target_mass"),
+        position(example, "target_x", "target_y"),
+        new Vector2(number(example, "target_vx"), number(example, "target_vy"))
+    );
+  }
+
+  private void calculateElasticAcceleration(World world, Map<String, String> example) {
+    assertEquals(text(example, "source_body"), world.elasticSource.name());
+    assertEquals(text(example, "target_body"), world.elasticTarget.name());
+    world.elasticAcceleration = Physics.accelerationFromElasticBody(
+        world.elasticSource.mass(),
+        world.tidalDeformation.firstFocus(),
+        world.tidalDeformation.secondFocus(),
+        world.elasticTarget,
+        number(example, "gravity_constant")
+    );
   }
 
   private void setOrAssertViewCenter(World world, Map<String, String> example, String xKey, String yKey) {
