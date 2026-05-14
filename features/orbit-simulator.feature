@@ -96,3 +96,24 @@ Feature: 2D orbit simulator
       | 2                | 1               | 1                | 2               | 2X          | earth | 219.8368 | 6.0302 | -0.0816  | 3.0151 |
       | 2                | 1               | 1                | 2               | 2X          | moon  | 263.6786 | 9.0454 | -0.1607  | 4.5227 |
       | 2                | 1               | 1                | 2               | 2X          | sun   | 0.0083   | 0      | 0.0042   | 0      |
+
+  Scenario Outline: Empty orbit area click adds a body in circular orbit around the sun
+    Given the default orbit simulator bodies are running
+    When the empty orbit area is clicked at position <x>, <y> using gravity constant <gravity_constant>
+    Then a body <body> is added with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>
+    And the body <body> has circular orbit speed <speed> around the sun
+    And the simulator has <body_count> bodies
+
+    Examples:
+      | x   | y | gravity_constant | body   | color | radius_px | mass | vx | vy     | speed  | body_count |
+      | 300 | 0 | 1                | body_1 | gray  | 6         | 1    | 0  | 2.5820 | 2.5820 | 4          |
+
+  Scenario Outline: Dragging a body sets its aphelion
+    Given the default orbit simulator bodies are running
+    When the body <body> is dragged to aphelion position <aphelion_x>, <aphelion_y> using gravity constant <gravity_constant>
+    Then the body <body> has perihelion distance <perihelion_distance> and aphelion distance <aphelion_distance> around the sun
+    And the body <body> has position <aphelion_x>, <aphelion_y> and velocity <vx>, <vy>
+
+    Examples:
+      | body  | aphelion_x | aphelion_y | gravity_constant | perihelion_distance | aphelion_distance | vx | vy     |
+      | earth | 330        | 0          | 1                | 220                 | 330               | 0  | 2.2020 |
