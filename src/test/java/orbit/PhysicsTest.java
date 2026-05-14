@@ -91,6 +91,7 @@ class PhysicsTest {
 
     assertEquals("body_1", body.name());
     assertEquals("sun", body.orbitCenter());
+    assertEquals(4, body.radiusPixels(), 0.000001);
     assertEquals(300, body.periapsisDistance(), 0.000001);
     assertEquals(0, body.velocity().x(), 0.0001);
     assertEquals(2.5820, body.velocity().y(), 0.0001);

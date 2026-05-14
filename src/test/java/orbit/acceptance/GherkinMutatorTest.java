@@ -40,6 +40,37 @@ class GherkinMutatorTest {
     );
   }
 
+  @Test
+  void filtersRadiusCorrelationExampleValuesThatPreserveTheOrderingProperty() {
+    assertFilteredOutAndRetained(
+        "Body radius increases with mass",
+        Map.of(
+            "smaller_body", "moon",
+            "smaller_mass", "1",
+            "smaller_radius_px", "4",
+            "larger_body", "earth",
+            "larger_mass", "100",
+            "larger_radius_px", "12"
+        ),
+        List.of("smaller_body", "smaller_mass", "smaller_radius_px", "larger_body", "larger_mass", "larger_radius_px"),
+        List.of()
+    );
+  }
+
+  @Test
+  void filtersSpeedSliderStartingValueThatIsReplacedByDrag() {
+    assertFilteredOutAndRetained(
+        "Speed slider thumb can be dragged",
+        Map.of(
+            "start_speed", "1",
+            "end_speed", "12",
+            "speed_label", "12X"
+        ),
+        List.of("start_speed"),
+        List.of("end_speed")
+    );
+  }
+
   private static void assertFilteredOutAndRetained(
       String scenarioName,
       Map<String, String> example,
@@ -144,6 +175,7 @@ class GherkinMutatorTest {
 
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_body")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_radius_px")));
+    assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".second_x")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".second_vx")));
     assertTrue(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_x")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[1]") && path.endsWith(".second_color")));
