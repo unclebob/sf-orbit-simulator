@@ -42,49 +42,59 @@ public final class FeatureJson {
   }
 
   private static void writeScenarios(StringBuilder json, List<Feature.Scenario> scenarios, int indent) {
-    json.append("[\n");
-    for (int i = 0; i < scenarios.size(); i++) {
-      Feature.Scenario scenario = scenarios.get(i);
-      line(json, indent + 2, "{");
-      field(json, indent + 4, "name", scenario.name(), true);
-      key(json, indent + 4, "steps");
-      writeSteps(json, scenario.steps(), indent + 4);
-      json.append(",\n");
-      key(json, indent + 4, "examples");
-      writeExamples(json, scenario.examples(), indent + 4);
-      json.append('\n');
-      indent(json, indent + 2).append(i + 1 == scenarios.size() ? "}" : "},").append('\n');
-    }
-    indent(json, indent).append("]");
+    writeObjectArray(json, scenarios, indent, FeatureJson::writeScenario);
+  }
+
+  private static void writeScenario(StringBuilder json, Feature.Scenario scenario, int indent) {
+    field(json, indent, "name", scenario.name(), true);
+    key(json, indent, "steps");
+    writeSteps(json, scenario.steps(), indent);
+    json.append(",\n");
+    key(json, indent, "examples");
+    writeExamples(json, scenario.examples(), indent);
+    json.append('\n');
   }
 
   private static void writeSteps(StringBuilder json, List<Feature.Step> steps, int indent) {
+    writeObjectArray(json, steps, indent, FeatureJson::writeStep);
+  }
+
+  private static void writeStep(StringBuilder json, Feature.Step step, int indent) {
+    field(json, indent, "keyword", step.keyword(), true);
+    field(json, indent, "text", step.text(), true);
+    key(json, indent, "parameters");
+    writeStringArray(json, step.parameters(), indent);
+    json.append('\n');
+  }
+
+  private static void writeExamples(StringBuilder json, List<Map<String, String>> examples, int indent) {
+    writeObjectArray(json, examples, indent, FeatureJson::writeExample);
+  }
+
+  private static void writeExample(StringBuilder json, Map<String, String> example, int indent) {
+    int field = 0;
+    for (Map.Entry<String, String> entry : example.entrySet()) {
+      field(json, indent, entry.getKey(), entry.getValue(), ++field < example.size());
+    }
+  }
+
+  private static <T> void writeObjectArray(
+      StringBuilder json,
+      List<T> values,
+      int indent,
+      JsonObjectWriter<T> writer
+  ) {
     json.append("[\n");
-    for (int i = 0; i < steps.size(); i++) {
-      Feature.Step step = steps.get(i);
+    for (int i = 0; i < values.size(); i++) {
       line(json, indent + 2, "{");
-      field(json, indent + 4, "keyword", step.keyword(), true);
-      field(json, indent + 4, "text", step.text(), true);
-      key(json, indent + 4, "parameters");
-      writeStringArray(json, step.parameters(), indent + 4);
-      json.append('\n');
-      indent(json, indent + 2).append(i + 1 == steps.size() ? "}" : "},").append('\n');
+      writer.write(json, values.get(i), indent + 4);
+      indent(json, indent + 2).append(i + 1 == values.size() ? "}" : "},").append('\n');
     }
     indent(json, indent).append("]");
   }
 
-  private static void writeExamples(StringBuilder json, List<Map<String, String>> examples, int indent) {
-    json.append("[\n");
-    for (int i = 0; i < examples.size(); i++) {
-      Map<String, String> example = examples.get(i);
-      line(json, indent + 2, "{");
-      int field = 0;
-      for (Map.Entry<String, String> entry : example.entrySet()) {
-        field(json, indent + 4, entry.getKey(), entry.getValue(), ++field < example.size());
-      }
-      indent(json, indent + 2).append(i + 1 == examples.size() ? "}" : "},").append('\n');
-    }
-    indent(json, indent).append("]");
+  private interface JsonObjectWriter<T> {
+    void write(StringBuilder json, T value, int indent);
   }
 
   private static void writeStringArray(StringBuilder json, List<String> values, int indent) {

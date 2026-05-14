@@ -3,18 +3,19 @@ package orbit.acceptance;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ValueMutatorTest {
   @Test
   void mutatesBooleansAndNumbersAndStrings() {
-    ValueMutator mutator = new ValueMutator();
-
-    assertEquals("false", mutator.mutate("$.x", "true"));
-    assertNotEquals("null", mutator.mutate("$.x", "null"));
-    assertNotEquals("20", mutator.mutate("$.x", "20"));
-    assertNotEquals("3.14", mutator.mutate("$.x", "3.14"));
-    assertNotEquals("accepted", mutator.mutate("$.x", "accepted"));
+    assertMutated(Map.of(
+        "$.null", "null",
+        "$.integer", "20",
+        "$.float", "3.14",
+        "$.string", "accepted"
+    ));
+    assertEquals("false", new ValueMutator().mutate("$.boolean", "true"));
   }
 
   @Test
@@ -26,12 +27,19 @@ class ValueMutatorTest {
 
   @Test
   void mutatesCompoundAndTemporalValues() {
-    ValueMutator mutator = new ValueMutator();
+    assertMutated(Map.of(
+        "$.list", "1, 2, 3",
+        "$.time", "2026-05-14T12:00:00",
+        "$.date", "2026-05-14",
+        "$.clock", "12:00:00",
+        "$.duration", "5s"
+    ));
+  }
 
-    assertNotEquals("1, 2, 3", mutator.mutate("$.list", "1, 2, 3"));
-    assertNotEquals("2026-05-14T12:00:00", mutator.mutate("$.time", "2026-05-14T12:00:00"));
-    assertNotEquals("2026-05-14", mutator.mutate("$.date", "2026-05-14"));
-    assertNotEquals("12:00:00", mutator.mutate("$.clock", "12:00:00"));
-    assertNotEquals("5s", mutator.mutate("$.duration", "5s"));
+  private static void assertMutated(Map<String, String> examples) {
+    ValueMutator mutator = new ValueMutator();
+    for (Map.Entry<String, String> example : examples.entrySet()) {
+      assertNotEquals(example.getValue(), mutator.mutate(example.getKey(), example.getValue()));
+    }
   }
 }

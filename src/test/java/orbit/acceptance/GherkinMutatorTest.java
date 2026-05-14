@@ -36,7 +36,7 @@ class GherkinMutatorTest {
 
   @Test
   void reportsTextAndJsonResults() {
-    Mutation mutation = new Mutation("m1", "$.scenarios[0].examples[0].mass", "1", "2");
+    Mutation mutation = new Mutation("m\"1", "$.scenarios[0].examples[0].mass", "one\n1", "two\t2");
     List<GherkinMutator.Result> results = List.of(
         new GherkinMutator.Result(mutation, "killed", "", "", 10),
         new GherkinMutator.Result(mutation, "survived", "still passed", "", 20),
@@ -49,11 +49,25 @@ class GherkinMutatorTest {
     assertTrue(text.contains("total=3 killed=1 survived=1 errors=1"));
     assertTrue(text.contains("output:\nstill passed"));
     assertTrue(json.contains("\"Survived\":1"));
+    assertTrue(json.contains("\"ID\":\"m\\\"1\""));
+    assertTrue(json.contains("\"Original\":\"one\\n1\""));
+    assertTrue(json.contains("\"Mutated\":\"two\\t2\""));
     assertTrue(json.contains("\"Error\":\"compile failed\""));
   }
 
   @Test
   void returnsUsageExitCodeForBadOptions() {
     assertEquals(2, GherkinMutator.exitCode(new String[] {"--unknown"}));
+  }
+
+  @Test
+  void normalizesWorkerCountAndParsesTimeout() {
+    GherkinMutator.Options options = GherkinMutator.Options.parse(new String[] {
+        "--workers", "0",
+        "--timeout", "5s"
+    });
+
+    assertEquals(1, options.workers());
+    assertEquals(5, options.timeout().toSeconds());
   }
 }

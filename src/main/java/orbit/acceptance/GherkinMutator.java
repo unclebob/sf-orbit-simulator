@@ -3,8 +3,6 @@ package orbit.acceptance;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -14,13 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.tools.ToolProvider;
-import org.junit.platform.engine.discovery.DiscoverySelectors;
-import org.junit.platform.launcher.LauncherDiscoveryRequest;
-import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
-import org.junit.platform.launcher.core.LauncherFactory;
-import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
-import org.junit.platform.launcher.listeners.TestExecutionSummary;
+import org.junit.jupiter.api.DynamicTest;
 
 public class GherkinMutator {
   private static final Set<String> EQUIVALENT_GRAVITY_KEYS = Set.of(
@@ -64,8 +56,13 @@ public class GherkinMutator {
     Feature base = new GherkinParser().parse(Files.readAllLines(options.feature));
     List<Mutation> mutations = mutations(base);
     Files.createDirectories(options.workDir);
+    long deadline = System.nanoTime() + options.timeout.toNanos();
     List<Result> results = new ArrayList<>();
     for (Mutation mutation : mutations) {
+      if (System.nanoTime() >= deadline) {
+        results.add(new Result(mutation, "error", "", "mutation timeout expired", 0));
+        continue;
+      }
       results.add(runMutation(options, base, mutation));
     }
     return results;
@@ -75,10 +72,11 @@ public class GherkinMutator {
     long started = System.nanoTime();
     MutationWorkspace workspace = MutationWorkspace.create(options.workDir, mutation);
     try {
+      Feature mutated = apply(base, mutation);
       workspace.create();
-      Files.writeString(workspace.ir, FeatureJson.write(apply(base, mutation)));
+      Files.writeString(workspace.ir, FeatureJson.write(mutated));
       new AcceptanceGenerator().generate(workspace.ir, workspace.generated);
-      RunnerResult runner = runGeneratedTest(workspace.generated, workspace.classes);
+      RunnerResult runner = runAcceptance(mutated);
       return resultFor(mutation, runner, started);
     } catch (Exception error) {
       return new Result(mutation, "error", "", error.getMessage(), System.nanoTime() - started);
@@ -138,96 +136,39 @@ public class GherkinMutator {
     return new Feature.Scenario(scenario.name(), scenario.steps(), examples);
   }
 
-  private RunnerResult runGeneratedTest(Path generatedSource, Path classes) throws Exception {
-    RunnerResult compilationFailure = compileGeneratedTest(generatedSource, classes);
-    if (compilationFailure != null) {
-      return compilationFailure;
+  private RunnerResult runAcceptance(Feature feature) {
+    List<DynamicTest> tests = new AcceptanceRuntime(new OrbitStepHandlers()).tests(feature).stream().toList();
+    List<TestFailure> failures = new ArrayList<>();
+    int succeeded = 0;
+    for (DynamicTest test : tests) {
+      try {
+        test.getExecutable().execute();
+        succeeded++;
+      } catch (Throwable failure) {
+        failures.add(new TestFailure(test.getDisplayName(), failure));
+      }
     }
-
-    URLClassLoader classLoader = new GeneratedTestClassLoader(
-        new URL[] {classes.toUri().toURL()},
-        Thread.currentThread().getContextClassLoader()
-    );
-    try {
-      return runTestClass(classLoader);
-    } finally {
-      classLoader.close();
-    }
+    return new RunnerResult(failures.isEmpty() ? 0 : 1, summaryOutput(tests.size(), succeeded, failures));
   }
 
-  private RunnerResult compileGeneratedTest(Path generatedSource, Path classes) {
-    int compileExit = ToolProvider.getSystemJavaCompiler().run(
-        null,
-        null,
-        null,
-        "-cp", System.getProperty("java.class.path"),
-        "-d", classes.toString(),
-        generatedSource.toString()
-    );
-    if (compileExit != 0) {
-      return new RunnerResult(2, "generated test compilation failed");
-    }
-    return null;
-  }
-
-  private RunnerResult runTestClass(URLClassLoader classLoader) throws ClassNotFoundException {
-    Class<?> testClass = Class.forName("orbit.acceptance.generated.OrbitSimulatorAcceptanceTest", true, classLoader);
-    SummaryGeneratingListener listener = new SummaryGeneratingListener();
-    LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()
-        .selectors(DiscoverySelectors.selectClass(testClass))
-        .build();
-    Thread current = Thread.currentThread();
-    ClassLoader previous = current.getContextClassLoader();
-    current.setContextClassLoader(classLoader);
-    try {
-      LauncherFactory.create().execute(request, listener);
-    } finally {
-      current.setContextClassLoader(previous);
-    }
-
-    TestExecutionSummary summary = listener.getSummary();
-    String output = summaryOutput(summary);
-    return new RunnerResult(summary.getFailures().isEmpty() ? 0 : 1, output);
-  }
-
-  private String summaryOutput(TestExecutionSummary summary) {
+  private String summaryOutput(int found, int succeeded, List<TestFailure> failures) {
     StringWriter text = new StringWriter();
     PrintWriter writer = new PrintWriter(text);
     writer.printf(
         "tests=%d succeeded=%d failed=%d%n",
-        summary.getTestsFoundCount(),
-        summary.getTestsSucceededCount(),
-        summary.getTestsFailedCount()
+        found,
+        succeeded,
+        failures.size()
     );
-    for (TestExecutionSummary.Failure failure : summary.getFailures()) {
-      writer.println(failure.getTestIdentifier().getDisplayName());
-      failure.getException().printStackTrace(writer);
+    for (TestFailure failure : failures) {
+      writer.println(failure.displayName());
+      failure.error().printStackTrace(writer);
     }
     writer.flush();
     return text.toString();
   }
 
-  private static final class GeneratedTestClassLoader extends URLClassLoader {
-    private static final String GENERATED_TEST = "orbit.acceptance.generated.OrbitSimulatorAcceptanceTest";
-
-    GeneratedTestClassLoader(URL[] urls, ClassLoader parent) {
-      super(urls, parent);
-    }
-
-    @Override
-    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-      if (GENERATED_TEST.equals(name)) {
-        Class<?> loaded = findLoadedClass(name);
-        if (loaded == null) {
-          loaded = findClass(name);
-        }
-        if (resolve) {
-          resolveClass(loaded);
-        }
-        return loaded;
-      }
-      return super.loadClass(name, resolve);
-    }
+  private record TestFailure(String displayName, Throwable error) {
   }
 
   private static Result resultFor(Mutation mutation, RunnerResult runner, long started) {
@@ -291,20 +232,33 @@ public class GherkinMutator {
   }
 
   private static void appendJsonResult(StringBuilder json, Result result) {
-    json.append("{\"Mutation\":{\"ID\":\"").append(result.mutation.id())
-        .append("\",\"Path\":\"").append(result.mutation.path())
-        .append("\",\"Description\":\"").append(result.mutation.description())
-        .append("\",\"Original\":\"").append(result.mutation.original())
-        .append("\",\"Mutated\":\"").append(result.mutation.mutated())
-        .append("\"},\"Status\":\"").append(result.status)
-        .append("\",\"Output\":\"").append(escape(result.output))
-        .append("\",\"Error\":\"").append(escape(result.error))
-        .append("\",\"Duration\":").append(result.duration)
-        .append('}');
+    json.append("{\"Mutation\":{");
+    appendJsonStringField(json, "ID", result.mutation.id(), true);
+    appendJsonStringField(json, "Path", result.mutation.path(), true);
+    appendJsonStringField(json, "Description", result.mutation.description(), true);
+    appendJsonStringField(json, "Original", result.mutation.original(), true);
+    appendJsonStringField(json, "Mutated", result.mutation.mutated(), false);
+    json.append("},");
+    appendJsonStringField(json, "Status", result.status, true);
+    appendJsonStringField(json, "Output", result.output, true);
+    appendJsonStringField(json, "Error", result.error, true);
+    json.append("\"Duration\":").append(result.duration).append('}');
+  }
+
+  private static void appendJsonStringField(StringBuilder json, String name, String value, boolean comma) {
+    json.append('"').append(name).append("\":\"").append(escape(value)).append('"');
+    if (comma) {
+      json.append(',');
+    }
   }
 
   private static String escape(String value) {
-    return value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
+    return value
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace("\t", "\\t");
   }
 
   public record Result(Mutation mutation, String status, String output, String error, long duration) {
@@ -313,19 +267,17 @@ public class GherkinMutator {
   private record RunnerResult(int exitCode, String output) {
   }
 
-  private record MutationWorkspace(Path ir, Path generated, Path classes) {
+  private record MutationWorkspace(Path ir, Path generated) {
     static MutationWorkspace create(Path workDir, Mutation mutation) {
       Path mutationDir = workDir.resolve(mutation.id());
       return new MutationWorkspace(
           mutationDir.resolve("feature.json"),
-          mutationDir.resolve("generated/orbit/acceptance/generated/OrbitSimulatorAcceptanceTest.java"),
-          mutationDir.resolve("classes")
+          mutationDir.resolve("generated/orbit/acceptance/generated/OrbitSimulatorAcceptanceTest.java")
       );
     }
 
     void create() throws IOException {
       Files.createDirectories(generated.getParent());
-      Files.createDirectories(classes);
     }
   }
 
