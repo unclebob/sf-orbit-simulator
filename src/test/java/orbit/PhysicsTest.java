@@ -161,6 +161,21 @@ class PhysicsTest {
   }
 
   @Test
+  void tickResolvesCollisionsAfterUpdatingPositions() {
+    OrbitSimulator simulator = new OrbitSimulator(List.of(
+        new Body("alpha", "blue", 4, 3, new Vector2(0, 0), new Vector2(3, 0)),
+        new Body("beta", "gray", 3, 1, new Vector2(10, 0), new Vector2(-3, 0))
+    ));
+
+    simulator.tick(1, 0);
+
+    assertEquals(1, simulator.bodyCount());
+    Body merged = simulator.bodies().getFirst();
+    assertEquals(4, merged.position().x(), 0.000001);
+    assertEquals(1.5, merged.velocity().x(), 0.000001);
+  }
+
+  @Test
   void bodiesOutsideLargerRadiusDoNotMerge() {
     OrbitSimulator simulator = new OrbitSimulator(List.of(
         new Body("alpha", "blue", 4, 3, new Vector2(0, 0), new Vector2(2, 0)),
