@@ -18,6 +18,16 @@ Feature: 2D orbit simulator
       | earth | blue   | 12        | 100  | 220 | 0 | 0  | 3.0151 |
       | moon  | gray   | 4         | 1    | 264 | 0 | 0  | 4.5227 |
 
+  Scenario Outline: Body radius increases with mass
+    Given a body <smaller_body> has mass <smaller_mass> and radius <smaller_radius_px>
+    And a body <larger_body> has mass <larger_mass> and radius <larger_radius_px>
+    Then <larger_body> has greater radius than <smaller_body>
+
+    Examples:
+      | smaller_body | smaller_mass | smaller_radius_px | larger_body | larger_mass | larger_radius_px |
+      | moon         | 1            | 4                 | earth       | 100         | 12               |
+      | earth        | 100          | 12                | sun         | 2000        | 36               |
+
   Scenario Outline: Default bodies are arranged as nested orbits
     Then the body <orbiter> starts <distance> units from <center>
 
@@ -119,7 +129,7 @@ Feature: 2D orbit simulator
 
     Examples:
       | x   | y | gravity_constant | body   | color | radius_px | mass | vx | vy     | speed  | body_count |
-      | 300 | 0 | 1                | body_1 | gray  | 6         | 1    | 0  | 2.5820 | 2.5820 | 4          |
+      | 300 | 0 | 1                | body_1 | gray  | 4         | 1    | 0  | 2.5820 | 2.5820 | 4          |
 
   Scenario Outline: Dragging a body previews its velocity change
     Given the default orbit simulator bodies are running
@@ -150,7 +160,7 @@ Feature: 2D orbit simulator
 
     Examples:
       | x   | y  | diameter_count | center_body | gravity_constant | body   | color | radius_px | mass | vx      | vy     | speed  | body_count |
-      | 220 | 60 | 4              | earth       | 1                | body_1 | gray  | 6         | 1    | -1.2910 | 3.0151 | 1.2910 | 4          |
+      | 220 | 60 | 4              | earth       | 1                | body_1 | gray  | 4         | 1    | -1.2910 | 3.0151 | 1.2910 | 4          |
 
   Scenario Outline: Releasing a dragged orbiting body updates its velocity vector
     Given the default orbit simulator bodies are running
