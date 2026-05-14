@@ -97,6 +97,17 @@ Feature: 2D orbit simulator
       | 2                | 1               | 1                | 2               | 2X          | moon  | 263.6786 | 9.0454 | -0.1607  | 4.5227 |
       | 2                | 1               | 1                | 2               | 2X          | sun   | 0.0083   | 0      | 0.0042   | 0      |
 
+  Scenario Outline: Speed slider thumb can be dragged
+    Given the default orbit simulator bodies are running
+    And the speed slider is set to <start_speed>
+    When the speed slider thumb is dragged to <end_speed>
+    Then the speed slider value is <end_speed>
+    And the speed slider label is <speed_label>
+
+    Examples:
+      | start_speed | end_speed | speed_label |
+      | 1           | 12        | 12X         |
+
   Scenario Outline: Empty orbit area click adds a body in circular orbit around the sun
     Given the default orbit simulator bodies are running
     When the empty orbit area is clicked at position <x>, <y> using gravity constant <gravity_constant>
