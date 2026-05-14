@@ -36,10 +36,11 @@ Feature: 2D orbit simulator
     And the integrated tidal stretch magnitude of <body> is <stretch_magnitude>
     And the body <body> is rendered as an ellipse centered at <x>, <y> with major radius <major_radius_px>, minor radius <minor_radius_px>, and major axis pointing toward <source_body>
     And the body <body> has gravity foci at <first_focus_x>, <first_focus_y> and <second_focus_x>, <second_focus_y>
+    And a <focus_line_color> line segment is drawn from <first_focus_x>, <first_focus_y> to <second_focus_x>, <second_focus_y>
 
     Examples:
-      | body  | mass | radius_px | x   | y | elasticity | source_body | source_mass | source_x | source_y | sample_count | gravity_constant | stretch_x | stretch_y | stretch_magnitude | major_radius_px | minor_radius_px | first_focus_x | first_focus_y | second_focus_x | second_focus_y |
-      | earth | 100  | 12        | 220 | 0 | 0.6        | sun         | 2000        | 0        | 0        | 32           | 1                | -0.906446 | 0         | 0.906446          | 18              | 6               | 203.029       | 0             | 236.971        | 0              |
+      | body  | mass | radius_px | x   | y | elasticity | source_body | source_mass | source_x | source_y | sample_count | gravity_constant | stretch_x | stretch_y | stretch_magnitude | major_radius_px | minor_radius_px | first_focus_x | first_focus_y | second_focus_x | second_focus_y | focus_line_color |
+      | earth | 100  | 12        | 220 | 0 | 1.0        | sun         | 2000        | 0        | 0        | 32           | 1                | -0.906446 | 0         | 0.906446          | 22              | 4               | 198.367       | 0             | 241.633        | 0              | black            |
 
   Scenario Outline: Elastic body gravity is split between ellipse foci
     Given an elastic body <source_body> has mass <source_mass>, first focus <first_focus_x>, <first_focus_y>, and second focus <second_focus_x>, <second_focus_y>
@@ -49,7 +50,7 @@ Feature: 2D orbit simulator
 
     Examples:
       | source_body | source_mass | first_focus_x | first_focus_y | second_focus_x | second_focus_y | target_body | target_mass | target_x | target_y | target_vx | target_vy | gravity_constant | target_ax | target_ay |
-      | earth       | 100         | 203.029       | 0             | 236.971        | 0              | moon        | 1           | 264      | 0        | 0         | 4.5227    | 1                | -0.060416 | 0         |
+      | earth       | 100         | 198.367       | 0             | 241.633        | 0              | moon        | 1           | 264      | 0        | 0         | 4.5227    | 1                | -0.061401 | 0         |
 
   Scenario Outline: Default bodies are arranged as nested orbits
     Then the body <orbiter> starts <distance> units from <center>
