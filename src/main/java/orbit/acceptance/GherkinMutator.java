@@ -38,6 +38,7 @@ public class GherkinMutator {
       "first_radius_px",
       "first_vx",
       "first_vy",
+      "first_x",
       "first_y",
       "second_body",
       "second_color",
@@ -61,16 +62,32 @@ public class GherkinMutator {
       "smaller_mass",
       "smaller_radius_px"
   );
-  private static final Map<String, Set<String>> EQUIVALENT_KEYS_BY_SCENARIO = Map.of(
-      "Gravity is applied between every pair of bodies", EQUIVALENT_GRAVITY_KEYS,
-      "Pause stops physics updates", Set.of("paused_seconds"),
-      "Restart restores the initial simulation", EQUIVALENT_RESTART_KEYS,
-      "Near-body click adds a body in circular orbit around that body", Set.of("diameter_count"),
-      "Speed slider thumb can be dragged", Set.of("start_speed"),
-      "Body radius increases with mass", EQUIVALENT_RADIUS_CORRELATION_KEYS,
-      "Dragging a body previews its velocity change", EQUIVALENT_VELOCITY_PREVIEW_KEYS,
-      "Bodies outside collision range remain separate", EQUIVALENT_SEPARATE_COLLISION_KEYS,
-      "Colliding bodies merge into one body", EQUIVALENT_MERGED_COLLISION_KEYS
+  private static final Set<String> EQUIVALENT_TIDAL_DEFORMATION_KEYS = Set.of(
+      "body",
+      "mass",
+      "source_body",
+      "source_mass",
+      "source_x"
+  );
+  private static final Set<String> EQUIVALENT_ELASTIC_GRAVITY_KEYS = Set.of(
+      "source_body",
+      "target_body",
+      "target_mass",
+      "target_vx",
+      "target_vy"
+  );
+  private static final Map<String, Set<String>> EQUIVALENT_KEYS_BY_SCENARIO = Map.ofEntries(
+      Map.entry("Gravity is applied between every pair of bodies", EQUIVALENT_GRAVITY_KEYS),
+      Map.entry("Pause stops physics updates", Set.of("paused_seconds")),
+      Map.entry("Restart restores the initial simulation", EQUIVALENT_RESTART_KEYS),
+      Map.entry("Near-body click adds a body in circular orbit around that body", Set.of("diameter_count")),
+      Map.entry("Speed slider thumb can be dragged", Set.of("start_speed")),
+      Map.entry("Body radius increases with mass", EQUIVALENT_RADIUS_CORRELATION_KEYS),
+      Map.entry("Tidal forces stretch elastic bodies into ellipses", EQUIVALENT_TIDAL_DEFORMATION_KEYS),
+      Map.entry("Elastic body gravity is split between ellipse foci", EQUIVALENT_ELASTIC_GRAVITY_KEYS),
+      Map.entry("Dragging a body previews its velocity change", EQUIVALENT_VELOCITY_PREVIEW_KEYS),
+      Map.entry("Bodies outside collision range remain separate", EQUIVALENT_SEPARATE_COLLISION_KEYS),
+      Map.entry("Colliding bodies merge into one body", EQUIVALENT_MERGED_COLLISION_KEYS)
   );
 
   private final ValueMutator valueMutator = new ValueMutator();
