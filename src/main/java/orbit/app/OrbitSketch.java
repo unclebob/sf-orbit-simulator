@@ -91,7 +91,7 @@ public class OrbitSketch extends PApplet {
 
   @Override
   public void mouseWheel(MouseEvent event) {
-    adjustViewCenter(new Vector2(0, event.getCount()), WHEEL_SCROLL_SCALE);
+    adjustViewCenter(new Vector2(event.getCount(), 0), WHEEL_SCROLL_SCALE);
   }
 
   private void pressOrbitArea() {
