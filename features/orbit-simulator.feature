@@ -249,6 +249,18 @@ Feature: 2D orbit simulator
       | body  | body_x | body_y | mouse_x | mouse_y | vx | vy     |
       | earth | 220    | 0      | 220     | -50     | 0  | 3.0151 |
 
+  Scenario Outline: Zoomed-out body drag previews velocity toward the zoomed world position
+    Given the default orbit simulator bodies are running
+    And the view center is <start_center_x>, <start_center_y>
+    And the zoom-out slider is set to <zoom_out_multiplier>
+    When the body <body> is dragged toward screen offset <screen_x>, <screen_y> from the view center
+    Then a velocity preview line is drawn from <body_x>, <body_y> to <mouse_x>, <mouse_y>
+    And the body <body> still has position <body_x>, <body_y> and velocity <vx>, <vy>
+
+    Examples:
+      | start_center_x | start_center_y | zoom_out_multiplier | body  | screen_x | screen_y | body_x | body_y | mouse_x | mouse_y | vx | vy     |
+      | 0              | 0              | 2                   | earth | 110      | -25      | 220    | 0      | 220     | -50     | 0  | 3.0151 |
+
   Scenario Outline: Releasing a dragged body updates its velocity vector
     Given the default orbit simulator bodies are running
     When the body <body> is dragged from position <body_x>, <body_y> to mouse position <mouse_x>, <mouse_y>
