@@ -108,20 +108,35 @@ class OrbitSketchTest {
 
   @Test
   void controlRowEmptySpaceClickIsIgnored() throws Exception {
+    assertControlRowEmptySpaceClickIsIgnored(staticInt("CONTROL_Y") + 16);
+  }
+
+  @Test
+  void controlRowEmptySpaceTopEdgeClickIsIgnored() throws Exception {
+    assertControlRowEmptySpaceClickIsIgnored(staticInt("CONTROL_Y"));
+  }
+
+  @Test
+  void controlRowEmptySpaceBottomEdgeClickIsIgnored() throws Exception {
+    assertControlRowEmptySpaceClickIsIgnored(controlRowBottomY());
+  }
+
+  @Test
+  void emptySpaceBelowControlRowAddsBody() throws Exception {
     OrbitSketch sketch = new OrbitSketch();
     OrbitSimulator simulator = OrbitSimulator.defaults();
     simulator.setSpeedMultiplier(12);
     setInstanceField(sketch, "simulator", simulator);
     setInstanceField(sketch, "zoomOutMultiplier", 4);
     sketch.mouseX = staticInt("SLIDER_X") - 10;
-    sketch.mouseY = staticInt("CONTROL_Y") + 16;
+    sketch.mouseY = controlRowBottomY() + 1;
 
     sketch.mousePressed();
 
     assertEquals("NONE", instanceField(sketch, "dragAction").toString());
     assertEquals(12, simulator.speedMultiplier());
     assertEquals(4, instanceField(sketch, "zoomOutMultiplier"));
-    assertEquals(3, simulator.bodyCount());
+    assertEquals(4, simulator.bodyCount());
   }
 
   @Test
@@ -211,6 +226,23 @@ class OrbitSketchTest {
     assertEquals(4, instanceField(sketch, "zoomOutMultiplier"));
   }
 
+  private static void assertControlRowEmptySpaceClickIsIgnored(int mouseY) throws Exception {
+    OrbitSketch sketch = new OrbitSketch();
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+    simulator.setSpeedMultiplier(12);
+    setInstanceField(sketch, "simulator", simulator);
+    setInstanceField(sketch, "zoomOutMultiplier", 4);
+    sketch.mouseX = staticInt("SLIDER_X") - 10;
+    sketch.mouseY = mouseY;
+
+    sketch.mousePressed();
+
+    assertEquals("NONE", instanceField(sketch, "dragAction").toString());
+    assertEquals(12, simulator.speedMultiplier());
+    assertEquals(4, instanceField(sketch, "zoomOutMultiplier"));
+    assertEquals(3, simulator.bodyCount());
+  }
+
   private static void clickSliderGutter(OrbitSketch sketch, OrbitSimulator simulator, String sliderName, int yOffset) throws Exception {
     setInstanceField(sketch, "simulator", simulator);
     Object slider = staticField(sliderName);
@@ -225,6 +257,11 @@ class OrbitSketchTest {
 
   private static int gutterEdgeOffset(String sliderName) throws Exception {
     return (int) invoke(staticField(sliderName), "handleRadius") * 2;
+  }
+
+  private static int controlRowBottomY() throws Exception {
+    Object slider = staticField("ZOOM_SLIDER");
+    return (int) invoke(slider, "y") + (int) invoke(slider, "handleRadius") * 2;
   }
 
   private static Field field(String name) throws Exception {
