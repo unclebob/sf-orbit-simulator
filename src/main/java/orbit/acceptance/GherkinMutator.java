@@ -104,6 +104,11 @@ public class GherkinMutator {
       "smaller_mass",
       "smaller_radius_px"
   );
+  private static final Set<String> EQUIVALENT_SUN_RECENTER_KEYS = Set.of(
+      "start_center_x",
+      "start_center_y",
+      "substep_seconds"
+  );
   private static final Map<String, Set<String>> EQUIVALENT_KEYS_BY_SCENARIO = Map.ofEntries(
       Map.entry("Gravity is applied between every pair of bodies", EQUIVALENT_GRAVITY_KEYS),
       Map.entry("Physics ticks update velocity and position from gravity", EQUIVALENT_VERLET_ROUNDING_KEYS),
@@ -118,7 +123,8 @@ public class GherkinMutator {
       Map.entry("Bodies outside collision range remain separate", EQUIVALENT_SEPARATE_COLLISION_KEYS),
       Map.entry("Bodies whose rendered edges do not touch remain separate", EQUIVALENT_SCREEN_SEPARATE_COLLISION_KEYS),
       Map.entry("Bodies collide inelastically when their rendered edges touch on screen", EQUIVALENT_INELASTIC_COLLISION_KEYS),
-      Map.entry("Bodies whose rendered edges overlap are separated until they only touch", EQUIVALENT_OVERLAP_SEPARATION_KEYS)
+      Map.entry("Bodies whose rendered edges overlap are separated until they only touch", EQUIVALENT_OVERLAP_SEPARATION_KEYS),
+      Map.entry("Sun recenter button centers the view on the sun", EQUIVALENT_SUN_RECENTER_KEYS)
   );
 
   private final ValueMutator valueMutator = new ValueMutator();

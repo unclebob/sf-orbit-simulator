@@ -19,16 +19,17 @@ public class OrbitSketch extends PApplet {
   );
   private static final Paint DEFAULT_PAINT = new Paint(255, 255, 255);
   private static final int CONTROL_Y = 16;
-  private static final int BUTTON_WIDTH = 92;
+  private static final int BUTTON_WIDTH = 100;
   private static final int BUTTON_HEIGHT = 32;
-  private static final int SLIDER_X = 248;
+  private static final int SLIDER_X = 372;
   private static final int SLIDER_Y = 32;
   private static final int SLIDER_WIDTH = 220;
   private static final int SLIDER_HANDLE_RADIUS = 8;
   private static final Button PAUSE_BUTTON = new Button(16, CONTROL_Y, ControlAction.PAUSE);
-  private static final Button RESTART_BUTTON = new Button(124, CONTROL_Y, ControlAction.RESTART);
+  private static final Button RESTART_BUTTON = new Button(128, CONTROL_Y, ControlAction.RESTART);
+  private static final Button CENTER_SUN_BUTTON = new Button(240, CONTROL_Y, ControlAction.CENTER_SUN);
   private static final Slider SPEED_SLIDER = new Slider(SLIDER_X, SLIDER_Y, SLIDER_WIDTH, SLIDER_HANDLE_RADIUS);
-  private static final List<Button> BUTTONS = List.of(PAUSE_BUTTON, RESTART_BUTTON);
+  private static final List<Button> BUTTONS = List.of(PAUSE_BUTTON, RESTART_BUTTON, CENTER_SUN_BUTTON);
 
   private OrbitSimulator simulator;
   private Vector2 viewCenter = new Vector2(0, 0);
@@ -75,7 +76,7 @@ public class OrbitSketch extends PApplet {
     BUTTONS.stream()
         .filter(button -> button.contains(mouseX, mouseY))
         .findFirst()
-        .ifPresentOrElse(button -> button.press(simulator), this::pressOrbitArea);
+        .ifPresentOrElse(button -> button.press(this), this::pressOrbitArea);
   }
 
   @Override
@@ -133,6 +134,10 @@ public class OrbitSketch extends PApplet {
     viewCenter = viewCenter.plus(scroll.times(scrollScale));
   }
 
+  private void centerViewOnSun() {
+    simulator.findBody("sun").ifPresent(sun -> viewCenter = sun.position());
+  }
+
   private Vector2 wheelScroll(MouseEvent event) {
     if (event.isShiftDown()) {
       return new Vector2(event.getCount(), 0);
@@ -161,6 +166,7 @@ public class OrbitSketch extends PApplet {
     textSize(14);
     drawButton(PAUSE_BUTTON, simulator.controlButtonLabel());
     drawButton(RESTART_BUTTON, "Restart");
+    drawButton(CENTER_SUN_BUTTON, "Center Sun");
     drawSpeedSlider();
   }
 
@@ -191,8 +197,8 @@ public class OrbitSketch extends PApplet {
   }
 
   private record Button(int x, int y, ControlAction action) {
-    void press(OrbitSimulator simulator) {
-      action.applyTo(simulator);
+    void press(OrbitSketch sketch) {
+      action.applyTo(sketch);
     }
 
     boolean contains(int pointX, int pointY) {
@@ -245,18 +251,24 @@ public class OrbitSketch extends PApplet {
   private enum ControlAction {
     PAUSE {
       @Override
-      void applyTo(OrbitSimulator simulator) {
-        simulator.togglePause();
+      void applyTo(OrbitSketch sketch) {
+        sketch.simulator.togglePause();
       }
     },
     RESTART {
       @Override
-      void applyTo(OrbitSimulator simulator) {
-        simulator.restart();
+      void applyTo(OrbitSketch sketch) {
+        sketch.simulator.restart();
+      }
+    },
+    CENTER_SUN {
+      @Override
+      void applyTo(OrbitSketch sketch) {
+        sketch.centerViewOnSun();
       }
     };
 
-    abstract void applyTo(OrbitSimulator simulator);
+    abstract void applyTo(OrbitSketch sketch);
   }
 
   private enum DragAction {

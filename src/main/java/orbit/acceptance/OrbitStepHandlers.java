@@ -105,6 +105,10 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> assertBodyState(world, example, "body_x", "body_y")
       ),
       Map.entry(
+          "the body <body> has position <sun_x>, <sun_y> and velocity <vx>, <vy>",
+          (world, example) -> assertBodyState(world, example, "sun_x", "sun_y")
+      ),
+      Map.entry(
           "the speed slider has minimum <minimum_speed>, maximum <maximum_speed>, step <speed_step>, value <default_speed>, and label <default_label>",
           this::assertDefaultSpeedSlider
       ),
@@ -162,6 +166,10 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> setOrAssertViewCenter(world, example, "end_center_x", "end_center_y")
       ),
       Map.entry(
+          "the view center is <sun_x>, <sun_y>",
+          (world, example) -> setOrAssertViewCenter(world, example, "sun_x", "sun_y")
+      ),
+      Map.entry(
           "the orbit area receives scroll input <scroll_x>, <scroll_y> with scroll scale <scroll_scale>",
           this::scrollViewCenter
       ),
@@ -172,6 +180,14 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry(
           "the orbit area receives vertical scroll input <scroll_y> with scroll scale <scroll_scale>",
           this::scrollViewCenterVertically
+      ),
+      Map.entry(
+          "the sun recenter button label is <recenter_label>",
+          this::assertSunRecenterLabel
+      ),
+      Map.entry(
+          "the sun recenter button is pressed",
+          this::centerViewOnSun
       ),
       Map.entry(
           "the empty orbit area is clicked at position <x>, <y> using gravity constant <gravity_constant>",
@@ -398,6 +414,15 @@ public class OrbitStepHandlers implements StepHandlers {
   private void scrollViewCenterBy(World world, Map<String, String> example, double scrollX, double scrollY) {
     Vector2 scroll = new Vector2(scrollX, scrollY);
     world.viewCenter = world.viewCenter.plus(scroll.times(number(example, "scroll_scale")));
+  }
+
+  private void assertSunRecenterLabel(World world, Map<String, String> example) {
+    assertEquals(text(example, "recenter_label"), "Center Sun");
+  }
+
+  private void centerViewOnSun(World world, Map<String, String> example) {
+    world.viewCenter = find(world, "sun").position();
+    world.viewCenterSet = true;
   }
 
   private void assertBodyMatches(Body body, Map<String, String> example) {

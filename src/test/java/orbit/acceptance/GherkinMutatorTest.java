@@ -256,6 +256,24 @@ class GherkinMutatorTest {
   }
 
   @Test
+  void filtersSunRecenterSetupValuesThatDoNotAffectTheCenteredView() {
+    assertFilteredOutAndRetained(
+        "Sun recenter button centers the view on the sun",
+        Map.of(
+            "elapsed_seconds", "1",
+            "gravity_constant", "1",
+            "substep_seconds", "0.016667",
+            "start_center_x", "120",
+            "start_center_y", "-80",
+            "sun_x", "0.0010",
+            "sun_y", "0"
+        ),
+        List.of("start_center_x", "start_center_y", "substep_seconds"),
+        List.of("elapsed_seconds", "gravity_constant", "sun_x", "sun_y")
+    );
+  }
+
+  @Test
   void reportsTextAndJsonResults() {
     Mutation mutation = new Mutation("m\"1", "$.scenarios[0].examples[0].mass", "one\n1", "two\t2");
     List<GherkinMutator.Result> results = List.of(
