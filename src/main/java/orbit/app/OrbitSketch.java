@@ -60,9 +60,7 @@ public class OrbitSketch extends PApplet {
   public void draw() {
     background(10, 12, 18);
     drawControls();
-    translate(width / 2f, height / 2f);
-    scale(viewScale());
-    translate(-(float) viewCenter.x(), -(float) viewCenter.y());
+    applyViewTransform();
     simulator.advanceDisplayTime(1.0 / 60.0, 1.0);
     for (Body body : simulator.bodies()) {
       fillFor(body.color());
@@ -150,6 +148,12 @@ public class OrbitSketch extends PApplet {
 
   private float viewScale() {
     return 1.0f / zoomOutMultiplier;
+  }
+
+  private void applyViewTransform() {
+    translate(width / 2f, height / 2f);
+    scale(viewScale());
+    translate(-(float) viewCenter.x(), -(float) viewCenter.y());
   }
 
   private void adjustViewCenter(Vector2 scroll, double scrollScale) {
