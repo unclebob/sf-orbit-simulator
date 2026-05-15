@@ -83,10 +83,17 @@ public class OrbitSketch extends PApplet {
       setZoomFromMouse();
       return;
     }
-    BUTTONS.stream()
+    Optional<Button> pressedButton = BUTTONS.stream()
         .filter(button -> button.contains(mouseX, mouseY))
-        .findFirst()
-        .ifPresentOrElse(button -> button.press(this), this::pressOrbitArea);
+        .findFirst();
+    if (pressedButton.isPresent()) {
+      pressedButton.orElseThrow().press(this);
+      return;
+    }
+    if (SPEED_SLIDER.gutterContains(mouseY) || ZOOM_SLIDER.gutterContains(mouseY)) {
+      return;
+    }
+    pressOrbitArea();
   }
 
   @Override
@@ -269,6 +276,10 @@ public class OrbitSketch extends PApplet {
   private record Slider(int x, int y, int width, int handleRadius) {
     boolean contains(int pointX, int pointY) {
       return pointX >= x && pointX <= endX() && Math.abs(pointY - y) <= handleRadius * 2;
+    }
+
+    boolean gutterContains(int pointY) {
+      return Math.abs(pointY - y) <= handleRadius * 2;
     }
 
     int valueFrom(int mouseX, PApplet sketch, int minimum, int maximum) {

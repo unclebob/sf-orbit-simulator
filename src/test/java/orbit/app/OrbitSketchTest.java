@@ -76,6 +76,23 @@ class OrbitSketchTest {
   }
 
   @Test
+  void speedSliderGutterClickIsIgnored() throws Exception {
+    OrbitSketch sketch = new OrbitSketch();
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+    simulator.setSpeedMultiplier(12);
+    setInstanceField(sketch, "simulator", simulator);
+    Object slider = staticField("SPEED_SLIDER");
+    sketch.mouseX = (int) invoke(slider, "x") - 20;
+    sketch.mouseY = (int) invoke(slider, "y");
+
+    sketch.mousePressed();
+
+    assertEquals("NONE", instanceField(sketch, "dragAction").toString());
+    assertEquals(12, simulator.speedMultiplier());
+    assertEquals(3, simulator.bodyCount());
+  }
+
+  @Test
   void zoomSliderTrackClickChangesZoomWithoutAddingABody() throws Exception {
     OrbitSketch sketch = new OrbitSketch();
     OrbitSimulator simulator = OrbitSimulator.defaults();

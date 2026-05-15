@@ -171,7 +171,13 @@ public class OrbitStepHandlers implements StepHandlers {
           "the speed slider track is clicked at value <speed_multiplier>",
           (world, example) -> world.simulator.setSpeedMultiplier((int) number(example, "speed_multiplier"))
       ),
+      Map.entry("the speed slider gutter is clicked", (world, example) -> {
+      }),
       Map.entry("the speed slider value is <end_speed>", (world, example) -> assertNumber(example, "end_speed", world.simulator.speedMultiplier())),
+      Map.entry(
+          "the speed slider value is <start_speed>",
+          (world, example) -> assertNumber(example, "start_speed", world.simulator.speedMultiplier())
+      ),
       Map.entry(
           "the speed slider value is <maximum_speed>",
           (world, example) -> assertNumber(example, "maximum_speed", world.simulator.speedMultiplier())
