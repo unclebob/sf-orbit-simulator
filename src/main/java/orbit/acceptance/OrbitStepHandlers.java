@@ -267,6 +267,10 @@ public class OrbitStepHandlers implements StepHandlers {
           this::startVelocityDrag
       ),
       Map.entry(
+          "the body <body> is dragged toward screen offset <screen_x>, <screen_y> from the view center",
+          this::startZoomedVelocityDrag
+      ),
+      Map.entry(
           "a velocity preview line is drawn from <body_x>, <body_y> to <mouse_x>, <mouse_y>",
           this::assertVelocityPreview
       ),
@@ -532,6 +536,14 @@ public class OrbitStepHandlers implements StepHandlers {
     world.draggedBodyName = bodyName;
     world.dragStart = find(world, bodyName).position();
     world.dragEnd = position(example, "mouse_x", "mouse_y");
+  }
+
+  private void startZoomedVelocityDrag(World world, Map<String, String> example) {
+    String bodyName = text(example, "body");
+    Vector2 screenOffset = position(example, "screen_x", "screen_y");
+    world.draggedBodyName = bodyName;
+    world.dragStart = find(world, bodyName).position();
+    world.dragEnd = world.viewCenter.plus(screenOffset.times(world.zoomOutMultiplier));
   }
 
   private void startVelocityDragFromPosition(World world, Map<String, String> example) {
