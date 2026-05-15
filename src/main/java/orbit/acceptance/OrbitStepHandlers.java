@@ -173,6 +173,10 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> world.zoomOutMultiplier = (int) number(example, "start_zoom")
       ),
       Map.entry(
+          "the zoom-out slider thumb is dragged to <end_zoom>",
+          (world, example) -> world.zoomOutMultiplier = (int) number(example, "end_zoom")
+      ),
+      Map.entry(
           "the zoom-out slider value is <zoom_out_multiplier>",
           (world, example) -> assertNumber(example, "zoom_out_multiplier", world.zoomOutMultiplier)
       ),

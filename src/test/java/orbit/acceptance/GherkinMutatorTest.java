@@ -72,6 +72,20 @@ class GherkinMutatorTest {
   }
 
   @Test
+  void filtersZoomOutSliderStartingValueThatIsReplacedByDrag() {
+    assertFilteredOutAndRetained(
+        "Zoom-out slider thumb can be dragged",
+        Map.of(
+            "start_zoom", "1",
+            "end_zoom", "4",
+            "zoom_label", "4X"
+        ),
+        List.of("start_zoom"),
+        List.of("end_zoom")
+    );
+  }
+
+  @Test
   void filtersVerletSubstepValuesThatPreserveRoundedVisibleState() {
     assertFilteredOutAndRetained(
         "Physics ticks update velocity and position from gravity",
@@ -234,6 +248,7 @@ class GherkinMutatorTest {
             Map.entry("first_y", "0"),
             Map.entry("first_vx", "0"),
             Map.entry("first_vy", "0"),
+            Map.entry("minimum_screen_distance_px", "7"),
             Map.entry("restitution", "0.5"),
             Map.entry("second_body", "beta"),
             Map.entry("second_color", "gray"),
@@ -250,6 +265,7 @@ class GherkinMutatorTest {
             "first_mass",
             "first_vx",
             "first_vy",
+            "minimum_screen_distance_px",
             "restitution",
             "second_body",
             "second_color",
