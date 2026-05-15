@@ -2,9 +2,10 @@ Feature: 2D orbit simulator
 
   The simulator shows a sun, an earth, and a moon in a two-dimensional
   scene. Each body has mass, position, and velocity, and every physics update
-  uses Newton's law of gravity between every pair of bodies. Physics updates
-  use a symplectic integrator so each step updates velocity from gravity
-  before updating position from the new velocity.
+  uses Newton's law of gravity between every pair of bodies. Display frame
+  time is accumulated into fixed-size physics substeps, and each substep uses
+  velocity Verlet integration so orbit behavior does not depend on coarse
+  display frame timing.
 
   Background:
     Given the orbit simulator is opened
@@ -50,43 +51,43 @@ Feature: 2D orbit simulator
 
   Scenario Outline: Physics ticks update velocity and position from gravity
     Given the default orbit simulator bodies are running
-    When the simulator advances by <seconds> seconds using gravity constant <gravity_constant> and symplectic integration
+    When the simulator advances by <seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>
     Then the body <body> has position <x>, <y> and velocity <vx>, <vy>
 
     Examples:
-      | seconds | gravity_constant | body  | x        | y      | vx        | vy     |
-      | 1       | 1                | earth | 219.9592 | 3.0151 | -0.0408   | 3.0151 |
-      | 1       | 1                | moon  | 263.9196 | 4.5227 | -0.0804   | 4.5227 |
-      | 1       | 1                | sun   | 0.0021   | 0      | 0.0021    | 0      |
+      | seconds | gravity_constant | substep_seconds | body  | x        | y      | vx       | vy     |
+      | 1       | 1                | 0.016667        | earth | 219.9796 | 3.0150 | -0.0408  | 3.0148 |
+      | 1       | 1                | 0.016667        | moon  | 263.9598 | 4.5223 | -0.0803  | 4.5216 |
+      | 1       | 1                | 0.016667        | sun   | 0.0010   | 0      | 0.0021   | 0      |
 
   Scenario Outline: Pause stops physics updates
     Given the default orbit simulator bodies are running
-    And the simulator has advanced by <before_pause_seconds> seconds using gravity constant <gravity_constant> and symplectic integration
+    And the simulator has advanced by <before_pause_seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>
     When the pause button is pressed
-    And the simulator attempts to advance by <paused_seconds> seconds using gravity constant <gravity_constant> and symplectic integration
+    And the simulator attempts to advance by <paused_seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>
     Then the simulation is paused
     And the control button label is <resume_label>
     And the body <body> has position <x>, <y> and velocity <vx>, <vy>
 
     Examples:
-      | before_pause_seconds | paused_seconds | gravity_constant | resume_label | body  | x        | y      | vx      | vy     |
-      | 1                    | 5              | 1                | Resume       | earth | 219.9592 | 3.0151 | -0.0408 | 3.0151 |
-      | 1                    | 5              | 1                | Resume       | moon  | 263.9196 | 4.5227 | -0.0804 | 4.5227 |
-      | 1                    | 5              | 1                | Resume       | sun   | 0.0021   | 0      | 0.0021  | 0      |
+      | before_pause_seconds | paused_seconds | gravity_constant | substep_seconds | resume_label | body  | x        | y      | vx      | vy     |
+      | 1                    | 5              | 1                | 0.016667        | Resume       | earth | 219.9796 | 3.0150 | -0.0408 | 3.0148 |
+      | 1                    | 5              | 1                | 0.016667        | Resume       | moon  | 263.9598 | 4.5223 | -0.0803 | 4.5216 |
+      | 1                    | 5              | 1                | 0.016667        | Resume       | sun   | 0.0010   | 0      | 0.0021  | 0      |
 
   Scenario Outline: Restart restores the initial simulation
     Given the default orbit simulator bodies are running
-    And the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant> and symplectic integration
+    And the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>
     When the restart button is pressed
     Then the simulation is running
     And the control button label is <pause_label>
     And the body <body> has position <x>, <y> and velocity <vx>, <vy>
 
     Examples:
-      | elapsed_seconds | gravity_constant | pause_label | body  | x   | y | vx | vy     |
-      | 3               | 1                | Pause       | sun   | 0   | 0 | 0  | 0      |
-      | 3               | 1                | Pause       | earth | 220 | 0 | 0  | 3.0151 |
-      | 3               | 1                | Pause       | moon  | 264 | 0 | 0  | 4.5227 |
+      | elapsed_seconds | gravity_constant | substep_seconds | pause_label | body  | x   | y | vx | vy     |
+      | 3               | 1                | 0.016667        | Pause       | sun   | 0   | 0 | 0  | 0      |
+      | 3               | 1                | 0.016667        | Pause       | earth | 220 | 0 | 0  | 3.0151 |
+      | 3               | 1                | 0.016667        | Pause       | moon  | 264 | 0 | 0  | 4.5227 |
 
   Scenario Outline: Speed slider is available with a default multiplier
     Then the speed slider has minimum <minimum_speed>, maximum <maximum_speed>, step <speed_step>, value <default_speed>, and label <default_label>
@@ -98,16 +99,28 @@ Feature: 2D orbit simulator
   Scenario Outline: Speed slider scales simulated time
     Given the default orbit simulator bodies are running
     When the speed slider is set to <speed_multiplier>
-    And the simulator advances display time by <display_seconds> seconds using gravity constant <gravity_constant> and symplectic integration
+    And the simulator advances display time by <display_seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>
     Then the simulator has advanced physics time by <physics_seconds> seconds
     And the speed slider label is <speed_label>
     And the body <body> has position <x>, <y> and velocity <vx>, <vy>
 
     Examples:
-      | speed_multiplier | display_seconds | gravity_constant | physics_seconds | speed_label | body  | x        | y      | vx       | vy     |
-      | 2                | 1               | 1                | 2               | 2X          | earth | 219.8368 | 6.0302 | -0.0816  | 3.0151 |
-      | 2                | 1               | 1                | 2               | 2X          | moon  | 263.6786 | 9.0454 | -0.1607  | 4.5227 |
-      | 2                | 1               | 1                | 2               | 2X          | sun   | 0.0083   | 0      | 0.0042   | 0      |
+      | speed_multiplier | display_seconds | gravity_constant | substep_seconds | physics_seconds | speed_label | body  | x        | y      | vx       | vy     |
+      | 2                | 1               | 1                | 0.016667        | 2               | 2X          | earth | 219.9184 | 6.0295 | -0.0816  | 3.0140 |
+      | 2                | 1               | 1                | 0.016667        | 2               | 2X          | moon  | 263.8394 | 9.0424 | -0.1606  | 4.5182 |
+      | 2                | 1               | 1                | 0.016667        | 2               | 2X          | sun   | 0.0042   | 0      | 0.0042   | 0.0001 |
+
+  Scenario Outline: Display frame size does not change physics results
+    Given the default orbit simulator bodies are running
+    When one simulator advances <physics_seconds> seconds in one display frame using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>
+    And another identical simulator advances <physics_seconds> seconds in <frame_count> display frames using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>
+    Then both simulations place body <body> at the same position and velocity
+
+    Examples:
+      | physics_seconds | frame_count | gravity_constant | substep_seconds | body  |
+      | 20              | 1200        | 1                | 0.016667        | earth |
+      | 20              | 1200        | 1                | 0.016667        | moon  |
+      | 20              | 1200        | 1                | 0.016667        | sun   |
 
   Scenario Outline: Speed slider thumb can be dragged
     Given the default orbit simulator bodies are running
