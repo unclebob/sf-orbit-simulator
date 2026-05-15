@@ -204,13 +204,16 @@ Feature: 2D orbit simulator
     Given the default orbit simulator bodies are running
     And the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>
     And the view center is <start_center_x>, <start_center_y>
+    And the zoom-out slider is set to <start_zoom>
     When the sun recenter button is pressed
     Then the view center is <sun_x>, <sun_y>
+    And the zoom-out slider value is <end_zoom>
+    And the zoom-out slider label is <zoom_label>
     And the body <body> has position <sun_x>, <sun_y> and velocity <vx>, <vy>
 
     Examples:
-      | elapsed_seconds | gravity_constant | substep_seconds | start_center_x | start_center_y | sun_x  | sun_y | body | vx     | vy |
-      | 1               | 1                | 0.016667        | 120            | -80            | 0.0010 | 0     | sun  | 0.0021 | 0  |
+      | elapsed_seconds | gravity_constant | substep_seconds | start_center_x | start_center_y | start_zoom | sun_x  | sun_y | end_zoom | zoom_label | body | vx     | vy |
+      | 1               | 1                | 0.016667        | 120            | -80            | 4          | 0.0010 | 0     | 4        | 4X         | sun  | 0.0021 | 0  |
 
   Scenario Outline: Empty orbit area click adds a body in circular orbit around the sun
     Given the default orbit simulator bodies are running
