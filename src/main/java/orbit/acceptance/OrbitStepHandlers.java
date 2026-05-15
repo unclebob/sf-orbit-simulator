@@ -90,7 +90,7 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> tickVerlet(world, example, "paused_seconds")
       ),
       Map.entry("the simulation is paused", (world, example) -> assertTrue(world.simulator.isPaused(), "simulation should be paused")),
-      Map.entry("the restart button is pressed", (world, example) -> world.simulator.restart()),
+      Map.entry("the restart button is pressed", this::restartAndCenterView),
       Map.entry("the simulation is running", (world, example) -> assertTrue(world.simulator.isRunning(), "simulation should be running")),
       Map.entry("the control button label is <resume_label>", (world, example) -> assertControlLabel(world, example, "resume_label")),
       Map.entry("the control button label is <pause_label>", (world, example) -> assertControlLabel(world, example, "pause_label")),
@@ -464,6 +464,11 @@ public class OrbitStepHandlers implements StepHandlers {
   private void centerViewOnSun(World world, Map<String, String> example) {
     world.viewCenter = find(world, "sun").position();
     world.viewCenterSet = true;
+  }
+
+  private void restartAndCenterView(World world, Map<String, String> example) {
+    world.simulator.restart();
+    centerViewOnSun(world, example);
   }
 
   private void assertBodyMatches(Body body, Map<String, String> example) {

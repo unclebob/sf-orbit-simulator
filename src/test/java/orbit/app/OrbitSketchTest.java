@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
+import orbit.OrbitSimulator;
 import orbit.Vector2;
 import org.junit.jupiter.api.Test;
 
@@ -43,6 +44,23 @@ class OrbitSketchTest {
     assertEquals(-120, mouse.y(), 0.000001);
   }
 
+  @Test
+  void restartButtonRestartsAndCentersTheViewOnTheResetSun() throws Exception {
+    OrbitSketch sketch = new OrbitSketch();
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+    simulator.tick(1, 1, 0.016667);
+    setInstanceField(sketch, "simulator", simulator);
+    setInstanceField(sketch, "viewCenter", new Vector2(120, -80));
+
+    pressButton(buttons().get(1), sketch);
+
+    Vector2 viewCenter = (Vector2) instanceField(sketch, "viewCenter");
+    assertEquals(0, viewCenter.x(), 0.000001);
+    assertEquals(0, viewCenter.y(), 0.000001);
+    assertEquals(0, simulator.findBody("sun").orElseThrow().position().x(), 0.000001);
+    assertEquals(0, simulator.findBody("sun").orElseThrow().position().y(), 0.000001);
+  }
+
   private static List<?> buttons() throws Exception {
     List<?> buttons = (List<?>) staticField("BUTTONS");
     assertNotNull(buttons);
@@ -65,10 +83,22 @@ class OrbitSketchTest {
     field.set(sketch, value);
   }
 
+  private static Object instanceField(OrbitSketch sketch, String name) throws Exception {
+    Field field = OrbitSketch.class.getDeclaredField(name);
+    field.setAccessible(true);
+    return field.get(sketch);
+  }
+
   private static Method instanceMethod(OrbitSketch sketch, String name) throws Exception {
     Method method = sketch.getClass().getDeclaredMethod(name);
     method.setAccessible(true);
     return method;
+  }
+
+  private static void pressButton(Object button, OrbitSketch sketch) throws Exception {
+    Method press = button.getClass().getDeclaredMethod("press", OrbitSketch.class);
+    press.setAccessible(true);
+    press.invoke(button, sketch);
   }
 
   private static void assertButtonAction(Object button, String actionName) throws Exception {

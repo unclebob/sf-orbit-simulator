@@ -303,6 +303,7 @@ public class OrbitSketch extends PApplet {
       @Override
       void applyTo(OrbitSketch sketch) {
         sketch.simulator.restart();
+        sketch.centerViewOnSun();
       }
     },
     CENTER_SUN {
