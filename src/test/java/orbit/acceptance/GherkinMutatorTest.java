@@ -131,6 +131,21 @@ class GherkinMutatorTest {
   }
 
   @Test
+  void filtersOverMaximumZoomSliderDragSetupValues() {
+    assertFilteredOutAndRetained(
+        "Zoom-out slider thumb clamps when dragged beyond the maximum",
+        Map.of(
+            "start_zoom", "4",
+            "attempted_zoom", "8",
+            "maximum_zoom", "5",
+            "zoom_label", "5X"
+        ),
+        List.of("start_zoom", "attempted_zoom"),
+        List.of("maximum_zoom", "zoom_label")
+    );
+  }
+
+  @Test
   void filtersVerletSubstepValuesThatPreserveRoundedVisibleState() {
     assertFilteredOutAndRetained(
         "Physics ticks update velocity and position from gravity",

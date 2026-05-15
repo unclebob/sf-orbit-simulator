@@ -128,6 +128,7 @@ public class GherkinMutator {
       Map.entry("Speed slider thumb clamps when dragged below the minimum", Set.of("start_speed", "attempted_speed")),
       Map.entry("Zoom-out slider thumb can be dragged", Set.of("start_zoom")),
       Map.entry("Zoom-out slider thumb clamps when dragged below the minimum", Set.of("start_zoom", "attempted_zoom")),
+      Map.entry("Zoom-out slider thumb clamps when dragged beyond the maximum", Set.of("start_zoom", "attempted_zoom")),
       Map.entry("Body radius increases with mass", EQUIVALENT_RADIUS_CORRELATION_KEYS),
       Map.entry("Dragging a body previews its velocity change", EQUIVALENT_VELOCITY_PREVIEW_KEYS),
       Map.entry("Bodies outside collision range remain separate", EQUIVALENT_SEPARATE_COLLISION_KEYS),

@@ -205,6 +205,10 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> world.zoomOutMultiplier = MINIMUM_ZOOM_OUT
       ),
       Map.entry(
+          "the zoom-out slider thumb is dragged beyond maximum to <attempted_zoom>",
+          (world, example) -> world.zoomOutMultiplier = MAXIMUM_ZOOM_OUT
+      ),
+      Map.entry(
           "the zoom-out slider track is clicked at value <zoom_out_multiplier>",
           (world, example) -> world.zoomOutMultiplier = (int) number(example, "zoom_out_multiplier")
       ),
@@ -219,6 +223,10 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry(
           "the zoom-out slider value is <minimum_zoom>",
           (world, example) -> assertNumber(example, "minimum_zoom", world.zoomOutMultiplier)
+      ),
+      Map.entry(
+          "the zoom-out slider value is <maximum_zoom>",
+          (world, example) -> assertNumber(example, "maximum_zoom", world.zoomOutMultiplier)
       ),
       Map.entry(
           "the zoom-out slider label is <zoom_label>",
