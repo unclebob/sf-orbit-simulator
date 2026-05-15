@@ -216,6 +216,46 @@ class GherkinMutatorTest {
   }
 
   @Test
+  void filtersOverlapSeparationSetupValuesThatDoNotAffectTheAssertedDistance() {
+    assertFilteredOutAndRetained(
+        "Bodies whose rendered edges overlap are separated until they only touch",
+        Map.ofEntries(
+            Map.entry("first_body", "alpha"),
+            Map.entry("first_color", "blue"),
+            Map.entry("first_mass", "3"),
+            Map.entry("first_radius_px", "4"),
+            Map.entry("first_x", "0"),
+            Map.entry("first_y", "0"),
+            Map.entry("first_vx", "0"),
+            Map.entry("first_vy", "0"),
+            Map.entry("restitution", "0.5"),
+            Map.entry("second_body", "beta"),
+            Map.entry("second_color", "gray"),
+            Map.entry("second_mass", "1"),
+            Map.entry("second_radius_px", "3"),
+            Map.entry("second_x", "6"),
+            Map.entry("second_y", "0"),
+            Map.entry("second_vx", "0"),
+            Map.entry("second_vy", "0")
+        ),
+        List.of(
+            "first_body",
+            "first_color",
+            "first_mass",
+            "first_vx",
+            "first_vy",
+            "restitution",
+            "second_body",
+            "second_color",
+            "second_mass",
+            "second_vx",
+            "second_vy"
+        ),
+        List.of("first_radius_px", "second_radius_px", "second_x")
+    );
+  }
+
+  @Test
   void reportsTextAndJsonResults() {
     Mutation mutation = new Mutation("m\"1", "$.scenarios[0].examples[0].mass", "one\n1", "two\t2");
     List<GherkinMutator.Result> results = List.of(

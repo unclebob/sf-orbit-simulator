@@ -217,10 +217,17 @@ public class OrbitSimulator {
     Body second = bodies.get(secondIndex);
     Vector2 normal = second.position().minus(first.position());
     double distance = normal.magnitude();
+    double touchDistance = first.radiusPixels() + second.radiusPixels();
+    Vector2 unitNormal = distance == 0 ? new Vector2(1, 0) : normal.times(1.0 / distance);
+    separateOverlap(firstIndex, secondIndex, first, second, unitNormal, touchDistance - distance);
+    first = bodies.get(firstIndex);
+    second = bodies.get(secondIndex);
+    normal = second.position().minus(first.position());
+    distance = normal.magnitude();
     if (distance == 0) {
       return;
     }
-    Vector2 unitNormal = normal.times(1.0 / distance);
+    unitNormal = normal.times(1.0 / distance);
     Vector2 relativeVelocity = second.velocity().minus(first.velocity());
     double velocityAlongNormal = relativeVelocity.x() * unitNormal.x() + relativeVelocity.y() * unitNormal.y();
     if (velocityAlongNormal >= 0) {
@@ -232,6 +239,24 @@ public class OrbitSimulator {
     Body updatedSecond = second.withPositionAndVelocity(second.position(), second.velocity().plus(impulseVector.times(1.0 / second.mass())));
     bodies.set(firstIndex, updatedFirst);
     bodies.set(secondIndex, updatedSecond);
+  }
+
+  private void separateOverlap(
+      int firstIndex,
+      int secondIndex,
+      Body first,
+      Body second,
+      Vector2 unitNormal,
+      double overlap
+  ) {
+    if (overlap <= 0) {
+      return;
+    }
+    double inverseMassSum = 1.0 / first.mass() + 1.0 / second.mass();
+    Vector2 firstAdjustment = unitNormal.times(-overlap * (1.0 / first.mass()) / inverseMassSum);
+    Vector2 secondAdjustment = unitNormal.times(overlap * (1.0 / second.mass()) / inverseMassSum);
+    bodies.set(firstIndex, first.withPositionAndVelocity(first.position().plus(firstAdjustment), first.velocity()));
+    bodies.set(secondIndex, second.withPositionAndVelocity(second.position().plus(secondAdjustment), second.velocity()));
   }
 
   private Vector2 circularOrbitVelocity(Vector2 position, Body center, double gravityConstant) {

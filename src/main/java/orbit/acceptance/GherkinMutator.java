@@ -65,6 +65,19 @@ public class GherkinMutator {
       "second_body",
       "second_color"
   );
+  private static final Set<String> EQUIVALENT_OVERLAP_SEPARATION_KEYS = Set.of(
+      "first_body",
+      "first_color",
+      "first_mass",
+      "first_vx",
+      "first_vy",
+      "restitution",
+      "second_body",
+      "second_color",
+      "second_mass",
+      "second_vx",
+      "second_vy"
+  );
   private static final Set<String> EQUIVALENT_SCREEN_SEPARATE_COLLISION_KEYS = Set.of(
       "first_body",
       "first_color",
@@ -104,7 +117,8 @@ public class GherkinMutator {
       Map.entry("Dragging a body previews its velocity change", EQUIVALENT_VELOCITY_PREVIEW_KEYS),
       Map.entry("Bodies outside collision range remain separate", EQUIVALENT_SEPARATE_COLLISION_KEYS),
       Map.entry("Bodies whose rendered edges do not touch remain separate", EQUIVALENT_SCREEN_SEPARATE_COLLISION_KEYS),
-      Map.entry("Bodies collide inelastically when their rendered edges touch on screen", EQUIVALENT_INELASTIC_COLLISION_KEYS)
+      Map.entry("Bodies collide inelastically when their rendered edges touch on screen", EQUIVALENT_INELASTIC_COLLISION_KEYS),
+      Map.entry("Bodies whose rendered edges overlap are separated until they only touch", EQUIVALENT_OVERLAP_SEPARATION_KEYS)
   );
 
   private final ValueMutator valueMutator = new ValueMutator();

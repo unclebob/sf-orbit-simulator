@@ -159,8 +159,25 @@ class PhysicsTest {
     assertBodiesRemainWithVelocities(simulator, 0.75, 3.75);
     Body alpha = simulator.findBody("alpha").orElseThrow();
     Body beta = simulator.findBody("beta").orElseThrow();
-    assertEquals(3, alpha.position().x(), 0.000001);
-    assertEquals(7, beta.position().x(), 0.000001);
+    assertEquals(2.25, alpha.position().x(), 0.000001);
+    assertEquals(9.25, beta.position().x(), 0.000001);
+    assertEquals(7, beta.position().minus(alpha.position()).magnitude(), 0.000001);
+  }
+
+  @Test
+  void overlappingBodiesAreSeparatedUntilRenderedEdgesTouch() {
+    OrbitSimulator simulator = collisionSimulator(0, 6, 0);
+
+    simulator.resolveCollisions(0.5);
+
+    Body alpha = simulator.findBody("alpha").orElseThrow();
+    Body beta = simulator.findBody("beta").orElseThrow();
+    assertEquals(2, simulator.bodyCount());
+    assertEquals(7, beta.position().minus(alpha.position()).magnitude(), 0.000001);
+    assertEquals(-0.25, alpha.position().x(), 0.000001);
+    assertEquals(6.75, beta.position().x(), 0.000001);
+    assertEquals(0, alpha.velocity().x(), 0.000001);
+    assertEquals(0, beta.velocity().x(), 0.000001);
   }
 
   private static OrbitSimulator collisionSimulator(double alphaVelocityX, double betaX, double betaVelocityX) {

@@ -258,6 +258,14 @@ public class OrbitStepHandlers implements StepHandlers {
           this::assertOriginalTouchDistance
       ),
       Map.entry(
+          "the resolved rendered body centers are at least <minimum_screen_distance_px> pixels apart",
+          this::assertResolvedMinimumScreenDistance
+      ),
+      Map.entry(
+          "the resolved rendered body edges can touch at screen distance <touch_distance_px>",
+          this::assertResolvedTouchDistance
+      ),
+      Map.entry(
           "the body <first_body> is still visible with color <first_color>, radius <first_radius_px>, mass <first_mass>, position <first_x>, <first_y>, and velocity <first_after_vx>, <first_after_vy>",
           (world, example) -> assertBodyStillVisible(world, example, "first")
       ),
@@ -474,6 +482,24 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private double originalRenderedCenterDistance(World world) {
     return world.firstCollisionBody.position().minus(world.secondCollisionBody.position()).magnitude();
+  }
+
+  private void assertResolvedMinimumScreenDistance(World world, Map<String, String> example) {
+    double distance = resolvedRenderedCenterDistance(world);
+    double minimum = number(example, "minimum_screen_distance_px");
+    assertTrue(distance + TOLERANCE >= minimum, "resolved bodies should not overlap");
+  }
+
+  private void assertResolvedTouchDistance(World world, Map<String, String> example) {
+    double touchDistance = world.firstCollisionBody.radiusPixels() + world.secondCollisionBody.radiusPixels();
+    assertNumber(example, "touch_distance_px", touchDistance);
+    assertNumber(example, "touch_distance_px", resolvedRenderedCenterDistance(world));
+  }
+
+  private double resolvedRenderedCenterDistance(World world) {
+    Body first = find(world, world.firstCollisionBody.name());
+    Body second = find(world, world.secondCollisionBody.name());
+    return first.position().minus(second.position()).magnitude();
   }
 
   private void assertBodyStillVisible(World world, Map<String, String> example, String prefix) {
