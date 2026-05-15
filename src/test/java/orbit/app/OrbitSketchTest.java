@@ -72,21 +72,21 @@ class OrbitSketchTest {
   }
 
   private static Object staticField(String name) throws Exception {
-    Field field = OrbitSketch.class.getDeclaredField(name);
-    field.setAccessible(true);
-    return field.get(null);
+    return declaredField(name).get(null);
   }
 
   private static void setInstanceField(OrbitSketch sketch, String name, Object value) throws Exception {
-    Field field = OrbitSketch.class.getDeclaredField(name);
-    field.setAccessible(true);
-    field.set(sketch, value);
+    declaredField(name).set(sketch, value);
   }
 
   private static Object instanceField(OrbitSketch sketch, String name) throws Exception {
+    return declaredField(name).get(sketch);
+  }
+
+  private static Field declaredField(String name) throws Exception {
     Field field = OrbitSketch.class.getDeclaredField(name);
     field.setAccessible(true);
-    return field.get(sketch);
+    return field;
   }
 
   private static Method instanceMethod(OrbitSketch sketch, String name) throws Exception {
