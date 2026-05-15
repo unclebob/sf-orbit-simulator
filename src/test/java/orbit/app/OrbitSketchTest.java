@@ -107,6 +107,24 @@ class OrbitSketchTest {
   }
 
   @Test
+  void controlRowEmptySpaceClickIsIgnored() throws Exception {
+    OrbitSketch sketch = new OrbitSketch();
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+    simulator.setSpeedMultiplier(12);
+    setInstanceField(sketch, "simulator", simulator);
+    setInstanceField(sketch, "zoomOutMultiplier", 4);
+    sketch.mouseX = staticInt("SLIDER_X") - 10;
+    sketch.mouseY = staticInt("CONTROL_Y") + 16;
+
+    sketch.mousePressed();
+
+    assertEquals("NONE", instanceField(sketch, "dragAction").toString());
+    assertEquals(12, simulator.speedMultiplier());
+    assertEquals(4, instanceField(sketch, "zoomOutMultiplier"));
+    assertEquals(3, simulator.bodyCount());
+  }
+
+  @Test
   void viewTransformCentersThenScalesThenOffsetsTheWorld() throws Exception {
     RecordingSketch sketch = new RecordingSketch();
     sketch.width = 800;

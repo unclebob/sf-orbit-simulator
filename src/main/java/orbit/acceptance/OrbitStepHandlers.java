@@ -228,6 +228,8 @@ public class OrbitStepHandlers implements StepHandlers {
           "the zoom-out slider value is <start_zoom>",
           (world, example) -> assertNumber(example, "start_zoom", world.zoomOutMultiplier)
       ),
+      Map.entry("the control row empty space is clicked", (world, example) -> {
+      }),
       Map.entry(
           "the zoom-out slider value is <end_zoom>",
           (world, example) -> assertNumber(example, "end_zoom", world.zoomOutMultiplier)

@@ -90,7 +90,7 @@ public class OrbitSketch extends PApplet {
       pressedButton.orElseThrow().press(this);
       return;
     }
-    if (SPEED_SLIDER.gutterContains(mouseY) || ZOOM_SLIDER.gutterContains(mouseY)) {
+    if (controlRowContains(mouseY)) {
       return;
     }
     pressOrbitArea();
@@ -169,6 +169,10 @@ public class OrbitSketch extends PApplet {
 
   private void centerViewOnSun() {
     simulator.findBody("sun").ifPresent(sun -> viewCenter = sun.position());
+  }
+
+  private boolean controlRowContains(int pointY) {
+    return pointY >= CONTROL_Y && pointY <= ZOOM_SLIDER.y + ZOOM_SLIDER.handleRadius * 2;
   }
 
   private Vector2 wheelScroll(MouseEvent event) {
@@ -276,10 +280,6 @@ public class OrbitSketch extends PApplet {
   private record Slider(int x, int y, int width, int handleRadius) {
     boolean contains(int pointX, int pointY) {
       return pointX >= x && pointX <= endX() && Math.abs(pointY - y) <= handleRadius * 2;
-    }
-
-    boolean gutterContains(int pointY) {
-      return Math.abs(pointY - y) <= handleRadius * 2;
     }
 
     int valueFrom(int mouseX, PApplet sketch, int minimum, int maximum) {
