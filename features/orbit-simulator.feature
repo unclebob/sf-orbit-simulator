@@ -102,7 +102,7 @@ Feature: 2D orbit simulator
 
     Examples:
       | minimum_speed | maximum_speed | speed_step | default_speed | default_label |
-      | 1             | 20            | 1          | 1             | 1X            |
+      | 1             | 100           | 1          | 1             | 1X            |
 
   Scenario Outline: Speed slider scales simulated time
     Given the default orbit simulator bodies are running
@@ -150,7 +150,18 @@ Feature: 2D orbit simulator
 
     Examples:
       | start_speed | attempted_speed | maximum_speed | speed_label |
-      | 12          | 25              | 20            | 20X         |
+      | 12          | 125             | 100           | 100X        |
+
+  Scenario Outline: Speed slider track click changes speed without adding a body
+    Given the default orbit simulator bodies are running
+    When the speed slider track is clicked at value <speed_multiplier>
+    Then the speed slider value is <speed_multiplier>
+    And the speed slider label is <speed_label>
+    And the simulator has <body_count> bodies
+
+    Examples:
+      | speed_multiplier | speed_label | body_count |
+      | 75               | 75X         | 3          |
 
   Scenario Outline: Zoom-out slider is available with a default multiplier
     Then the zoom-out slider has minimum <minimum_zoom>, maximum <maximum_zoom>, step <zoom_step>, value <default_zoom>, and label <default_label>
@@ -182,6 +193,17 @@ Feature: 2D orbit simulator
     Examples:
       | start_zoom | end_zoom | zoom_label |
       | 1          | 4        | 4X         |
+
+  Scenario Outline: Zoom-out slider track click changes zoom without adding a body
+    Given the default orbit simulator bodies are running
+    When the zoom-out slider track is clicked at value <zoom_out_multiplier>
+    Then the zoom-out slider value is <zoom_out_multiplier>
+    And the zoom-out slider label is <zoom_label>
+    And the simulator has <body_count> bodies
+
+    Examples:
+      | zoom_out_multiplier | zoom_label | body_count |
+      | 3                   | 3X         | 3          |
 
   Scenario Outline: Horizontal scroll wheel adjusts the view center left and right
     Given the default orbit simulator bodies are running
