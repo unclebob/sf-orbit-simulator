@@ -262,6 +262,21 @@ Feature: 2D orbit simulator
       | start_zoom | zoom_label | body_count |
       | 4          | 4X         | 3          |
 
+  Scenario Outline: Control row empty space click is ignored
+    Given the default orbit simulator bodies are running
+    And the speed slider is set to <start_speed>
+    And the zoom-out slider is set to <start_zoom>
+    When the control row empty space is clicked
+    Then the speed slider value is <start_speed>
+    And the speed slider label is <speed_label>
+    And the zoom-out slider value is <start_zoom>
+    And the zoom-out slider label is <zoom_label>
+    And the simulator has <body_count> bodies
+
+    Examples:
+      | start_speed | speed_label | start_zoom | zoom_label | body_count |
+      | 12          | 12X         | 4          | 4X         | 3          |
+
   Scenario Outline: Horizontal scroll wheel adjusts the view center left and right
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
