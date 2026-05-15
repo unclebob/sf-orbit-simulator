@@ -469,7 +469,7 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private void scrollViewCenter(World world, Map<String, String> example) {
     Vector2 scroll = position(example, "scroll_x", "scroll_y");
-    world.viewCenter = world.viewCenter.plus(scaledScroll(world, example, scroll));
+    adjustViewCenter(world, example, scroll);
   }
 
   private void scrollViewCenterHorizontally(World world, Map<String, String> example) {
@@ -482,6 +482,10 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private void scrollViewCenterBy(World world, Map<String, String> example, double scrollX, double scrollY) {
     Vector2 scroll = new Vector2(scrollX, scrollY);
+    adjustViewCenter(world, example, scroll);
+  }
+
+  private void adjustViewCenter(World world, Map<String, String> example, Vector2 scroll) {
     world.viewCenter = world.viewCenter.plus(scaledScroll(world, example, scroll));
   }
 
