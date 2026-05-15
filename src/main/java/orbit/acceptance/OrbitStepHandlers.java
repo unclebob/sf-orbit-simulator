@@ -475,8 +475,7 @@ public class OrbitStepHandlers implements StepHandlers {
   }
 
   private void assertOriginalTouchDistance(World world, Map<String, String> example) {
-    double touchDistance = world.firstCollisionBody.radiusPixels() + world.secondCollisionBody.radiusPixels();
-    assertNumber(example, "touch_distance_px", touchDistance);
+    assertTouchDistance(world, example);
     assertNumber(example, "touch_distance_px", originalRenderedCenterDistance(world));
   }
 
@@ -491,9 +490,13 @@ public class OrbitStepHandlers implements StepHandlers {
   }
 
   private void assertResolvedTouchDistance(World world, Map<String, String> example) {
+    assertTouchDistance(world, example);
+    assertNumber(example, "touch_distance_px", resolvedRenderedCenterDistance(world));
+  }
+
+  private void assertTouchDistance(World world, Map<String, String> example) {
     double touchDistance = world.firstCollisionBody.radiusPixels() + world.secondCollisionBody.radiusPixels();
     assertNumber(example, "touch_distance_px", touchDistance);
-    assertNumber(example, "touch_distance_px", resolvedRenderedCenterDistance(world));
   }
 
   private double resolvedRenderedCenterDistance(World world) {

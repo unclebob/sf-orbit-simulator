@@ -215,19 +215,31 @@ public class OrbitSimulator {
   private void collide(int firstIndex, int secondIndex, double restitution) {
     Body first = bodies.get(firstIndex);
     Body second = bodies.get(secondIndex);
+    Vector2 unitNormal = collisionNormal(first, second);
+    separateOverlap(firstIndex, secondIndex, first, second, unitNormal, overlap(first, second));
+    applyInelasticImpulse(firstIndex, secondIndex, restitution);
+  }
+
+  private Vector2 collisionNormal(Body first, Body second) {
     Vector2 normal = second.position().minus(first.position());
     double distance = normal.magnitude();
-    double touchDistance = first.radiusPixels() + second.radiusPixels();
-    Vector2 unitNormal = distance == 0 ? new Vector2(1, 0) : normal.times(1.0 / distance);
-    separateOverlap(firstIndex, secondIndex, first, second, unitNormal, touchDistance - distance);
-    first = bodies.get(firstIndex);
-    second = bodies.get(secondIndex);
-    normal = second.position().minus(first.position());
-    distance = normal.magnitude();
+    return distance == 0 ? new Vector2(1, 0) : normal.times(1.0 / distance);
+  }
+
+  private double overlap(Body first, Body second) {
+    double distance = first.position().minus(second.position()).magnitude();
+    return first.radiusPixels() + second.radiusPixels() - distance;
+  }
+
+  private void applyInelasticImpulse(int firstIndex, int secondIndex, double restitution) {
+    Body first = bodies.get(firstIndex);
+    Body second = bodies.get(secondIndex);
+    Vector2 normal = second.position().minus(first.position());
+    double distance = normal.magnitude();
     if (distance == 0) {
       return;
     }
-    unitNormal = normal.times(1.0 / distance);
+    Vector2 unitNormal = normal.times(1.0 / distance);
     Vector2 relativeVelocity = second.velocity().minus(first.velocity());
     double velocityAlongNormal = relativeVelocity.x() * unitNormal.x() + relativeVelocity.y() * unitNormal.y();
     if (velocityAlongNormal >= 0) {
