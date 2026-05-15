@@ -159,15 +159,15 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry("the speed slider value is <end_speed>", (world, example) -> assertNumber(example, "end_speed", world.simulator.speedMultiplier())),
       Map.entry(
           "the view center is <start_center_x>, <start_center_y>",
-          (world, example) -> setOrAssertViewCenter(world, example, "start_center_x", "start_center_y")
+          (world, example) -> setViewCenter(world, example, "start_center_x", "start_center_y")
       ),
       Map.entry(
           "the view center is <end_center_x>, <end_center_y>",
-          (world, example) -> setOrAssertViewCenter(world, example, "end_center_x", "end_center_y")
+          (world, example) -> assertViewCenter(world, example, "end_center_x", "end_center_y")
       ),
       Map.entry(
           "the view center is <sun_x>, <sun_y>",
-          (world, example) -> setOrAssertViewCenter(world, example, "sun_x", "sun_y")
+          (world, example) -> assertViewCenter(world, example, "sun_x", "sun_y")
       ),
       Map.entry(
           "the orbit area receives scroll input <scroll_x>, <scroll_y> with scroll scale <scroll_scale>",
@@ -388,13 +388,14 @@ public class OrbitStepHandlers implements StepHandlers {
     assertTrue(larger.radiusPixels() > smaller.radiusPixels(), "larger mass should render with larger radius");
   }
 
-  private void setOrAssertViewCenter(World world, Map<String, String> example, String xKey, String yKey) {
+  private void setViewCenter(World world, Map<String, String> example, String xKey, String yKey) {
+    world.viewCenter = position(example, xKey, yKey);
+    world.viewCenterSet = true;
+  }
+
+  private void assertViewCenter(World world, Map<String, String> example, String xKey, String yKey) {
+    assertTrue(world.viewCenterSet, "view center should already be established");
     Vector2 expected = position(example, xKey, yKey);
-    if (!world.viewCenterSet) {
-      world.viewCenter = expected;
-      world.viewCenterSet = true;
-      return;
-    }
     assertVector(world.viewCenter, expected.x(), expected.y());
   }
 
