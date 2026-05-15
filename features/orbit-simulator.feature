@@ -216,6 +216,17 @@ Feature: 2D orbit simulator
       | start_zoom | attempted_zoom | minimum_zoom | zoom_label |
       | 4          | 0              | 1            | 1X         |
 
+  Scenario Outline: Zoom-out slider thumb clamps when dragged beyond the maximum
+    Given the default orbit simulator bodies are running
+    And the zoom-out slider is set to <start_zoom>
+    When the zoom-out slider thumb is dragged beyond maximum to <attempted_zoom>
+    Then the zoom-out slider value is <maximum_zoom>
+    And the zoom-out slider label is <zoom_label>
+
+    Examples:
+      | start_zoom | attempted_zoom | maximum_zoom | zoom_label |
+      | 4          | 8              | 5            | 5X         |
+
   Scenario Outline: Zoom-out slider track click changes zoom without adding a body
     Given the default orbit simulator bodies are running
     When the zoom-out slider track is clicked at value <zoom_out_multiplier>
