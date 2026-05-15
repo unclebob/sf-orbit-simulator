@@ -555,15 +555,18 @@ public class OrbitStepHandlers implements StepHandlers {
   }
 
   private void startVelocityDragFromPosition(World world, Map<String, String> example) {
-    Body body = find(world, text(example, "body"));
-    assertVector(body.position(), example, "body_x", "body_y");
+    assertDraggedBodyPosition(world, example);
     startVelocityDrag(world, example);
   }
 
   private void startZoomedVelocityDragFromPosition(World world, Map<String, String> example) {
+    assertDraggedBodyPosition(world, example);
+    startVelocityDrag(world, example, zoomedWorldPosition(world, example));
+  }
+
+  private void assertDraggedBodyPosition(World world, Map<String, String> example) {
     Body body = find(world, text(example, "body"));
     assertVector(body.position(), example, "body_x", "body_y");
-    startZoomedVelocityDrag(world, example);
   }
 
   private void assertVelocityPreview(World world, Map<String, String> example) {
