@@ -157,6 +157,25 @@ Feature: 2D orbit simulator
       | 0              | 0              | -20      | 1            | 0            | -20          | earth | 220    | 0      | 0  | 3.0151 |
       | 0              | 0              | 20       | 1            | 0            | 20           | earth | 220    | 0      | 0  | 3.0151 |
 
+  Scenario Outline: Sun recenter button is available
+    Then the sun recenter button label is <recenter_label>
+
+    Examples:
+      | recenter_label |
+      | Center Sun     |
+
+  Scenario Outline: Sun recenter button centers the view on the sun
+    Given the default orbit simulator bodies are running
+    And the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>
+    And the view center is <start_center_x>, <start_center_y>
+    When the sun recenter button is pressed
+    Then the view center is <sun_x>, <sun_y>
+    And the body <body> has position <sun_x>, <sun_y> and velocity <vx>, <vy>
+
+    Examples:
+      | elapsed_seconds | gravity_constant | substep_seconds | start_center_x | start_center_y | sun_x  | sun_y | body | vx     | vy |
+      | 1               | 1                | 0.016667        | 120            | -80            | 0.0010 | 0     | sun  | 0.0021 | 0  |
+
   Scenario Outline: Empty orbit area click adds a body in circular orbit around the sun
     Given the default orbit simulator bodies are running
     When the empty orbit area is clicked at position <x>, <y> using gravity constant <gravity_constant>
