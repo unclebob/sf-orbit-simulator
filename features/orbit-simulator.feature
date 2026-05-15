@@ -271,6 +271,18 @@ Feature: 2D orbit simulator
       | body  | body_x | body_y | mouse_x | mouse_y | velocity_scale | vx | vy     |
       | earth | 220    | 0      | 220     | -50     | 0.01           | 0  | 2.5151 |
 
+  Scenario Outline: Releasing a zoomed-out body drag updates velocity toward the zoomed world position
+    Given the default orbit simulator bodies are running
+    And the view center is <start_center_x>, <start_center_y>
+    And the zoom-out slider is set to <zoom_out_multiplier>
+    When the body <body> is dragged from position <body_x>, <body_y> to screen offset <screen_x>, <screen_y> from the view center
+    And the mouse button is released with velocity scale <velocity_scale>
+    Then the body <body> has position <body_x>, <body_y> and velocity <vx>, <vy>
+
+    Examples:
+      | start_center_x | start_center_y | zoom_out_multiplier | body  | body_x | body_y | screen_x | screen_y | velocity_scale | vx | vy     |
+      | 0              | 0              | 2                   | earth | 220    | 0      | 110      | -25      | 0.01           | 0  | 2.5151 |
+
   Scenario Outline: Near-body click adds a body in circular orbit around that body
     Given the default orbit simulator bodies are running
     When the orbit area is clicked at position <x>, <y> within <diameter_count> diameters of <center_body> using gravity constant <gravity_constant>
