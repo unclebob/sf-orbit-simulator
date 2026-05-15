@@ -191,6 +191,26 @@ class GherkinMutatorTest {
   }
 
   @Test
+  void filtersZoomedNearBodyClickPreconditionDistance() {
+    List<String> paths = mutationPaths(
+        scenario(
+            "Zoomed-out near-body click adds a body orbiting the zoomed world center",
+            Map.ofEntries(
+                Map.entry("diameter_count", "4"),
+                Map.entry("center_body", "earth"),
+                Map.entry("screen_x", "110"),
+                Map.entry("screen_y", "30"),
+                Map.entry("x", "220"),
+                Map.entry("y", "60")
+            )
+        )
+    );
+
+    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".diameter_count")));
+    assertTrue(paths.stream().anyMatch(path -> path.endsWith(".screen_x")));
+  }
+
+  @Test
   void filtersCollisionSetupValuesThatDoNotAffectTheAssertedOutcome() {
     List<String> paths = mutationPaths(
         scenario(
