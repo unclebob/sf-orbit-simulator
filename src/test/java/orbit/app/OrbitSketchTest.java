@@ -3,8 +3,10 @@ package orbit.app;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import orbit.OrbitSimulator;
 import orbit.Vector2;
@@ -61,6 +63,32 @@ class OrbitSketchTest {
     assertEquals(0, simulator.findBody("sun").orElseThrow().position().y(), 0.000001);
   }
 
+  @Test
+  void zoomSliderPressStartsZoomDragAndUpdatesTheMultiplier() throws Exception {
+    OrbitSketch sketch = new OrbitSketch();
+    Object slider = staticField("ZOOM_SLIDER");
+    sketch.mouseX = (int) invoke(slider, "endX");
+    sketch.mouseY = (int) invoke(slider, "y");
+
+    sketch.mousePressed();
+
+    assertEquals("ZOOM", instanceField(sketch, "dragAction").toString());
+    assertEquals(5, instanceField(sketch, "zoomOutMultiplier"));
+  }
+
+  @Test
+  void viewTransformCentersThenScalesThenOffsetsTheWorld() throws Exception {
+    RecordingSketch sketch = new RecordingSketch();
+    sketch.width = 800;
+    sketch.height = 600;
+    setInstanceField(sketch, "zoomOutMultiplier", 2);
+    setInstanceField(sketch, "viewCenter", new Vector2(10, -20));
+
+    instanceMethod(sketch, "applyViewTransform").invoke(sketch);
+
+    assertEquals(List.of("translate 400.0 300.0", "scale 0.5", "translate -10.0 20.0"), sketch.operations);
+  }
+
   private static List<?> buttons() throws Exception {
     List<?> buttons = (List<?>) staticField("BUTTONS");
     assertNotNull(buttons);
@@ -72,39 +100,59 @@ class OrbitSketchTest {
   }
 
   private static Object staticField(String name) throws Exception {
-    return declaredField(name).get(null);
+    return field(name).get(null);
   }
 
   private static void setInstanceField(OrbitSketch sketch, String name, Object value) throws Exception {
-    declaredField(name).set(sketch, value);
+    field(name).set(sketch, value);
   }
 
   private static Object instanceField(OrbitSketch sketch, String name) throws Exception {
-    return declaredField(name).get(sketch);
+    return field(name).get(sketch);
   }
 
-  private static Field declaredField(String name) throws Exception {
+  private static Field field(String name) throws Exception {
     Field field = OrbitSketch.class.getDeclaredField(name);
-    field.setAccessible(true);
-    return field;
+    return accessible(field);
   }
 
   private static Method instanceMethod(OrbitSketch sketch, String name) throws Exception {
-    Method method = sketch.getClass().getDeclaredMethod(name);
-    method.setAccessible(true);
-    return method;
+    Method method = OrbitSketch.class.getDeclaredMethod(name);
+    return accessible(method);
+  }
+
+  private static Object invoke(Object target, String methodName) throws Exception {
+    Method method = target.getClass().getDeclaredMethod(methodName);
+    return accessible(method).invoke(target);
+  }
+
+  private static <T extends AccessibleObject> T accessible(T object) {
+    object.setAccessible(true);
+    return object;
   }
 
   private static void pressButton(Object button, OrbitSketch sketch) throws Exception {
     Method press = button.getClass().getDeclaredMethod("press", OrbitSketch.class);
-    press.setAccessible(true);
-    press.invoke(button, sketch);
+    accessible(press).invoke(button, sketch);
   }
 
   private static void assertButtonAction(Object button, String actionName) throws Exception {
     assertNotNull(button);
     Method action = button.getClass().getDeclaredMethod("action");
-    action.setAccessible(true);
-    assertEquals(actionName, action.invoke(button).toString());
+    assertEquals(actionName, accessible(action).invoke(button).toString());
+  }
+
+  private static class RecordingSketch extends OrbitSketch {
+    private final List<String> operations = new ArrayList<>();
+
+    @Override
+    public void translate(float x, float y) {
+      operations.add("translate " + x + " " + y);
+    }
+
+    @Override
+    public void scale(float size) {
+      operations.add("scale " + size);
+    }
   }
 }
