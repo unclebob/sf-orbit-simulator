@@ -493,8 +493,7 @@ public class OrbitStepHandlers implements StepHandlers {
   }
 
   private void clickZoomedEmptyOrbitArea(World world, Map<String, String> example) {
-    Vector2 screenOffset = position(example, "screen_x", "screen_y");
-    Vector2 worldPosition = world.viewCenter.plus(screenOffset.times(world.zoomOutMultiplier));
+    Vector2 worldPosition = zoomedWorldPosition(world, example);
     world.addedBody = world.simulator.addBodyInCircularOrbit(
         worldPosition,
         "sun",
@@ -532,18 +531,23 @@ public class OrbitStepHandlers implements StepHandlers {
   }
 
   private void startVelocityDrag(World world, Map<String, String> example) {
-    String bodyName = text(example, "body");
-    world.draggedBodyName = bodyName;
-    world.dragStart = find(world, bodyName).position();
-    world.dragEnd = position(example, "mouse_x", "mouse_y");
+    startVelocityDrag(world, example, position(example, "mouse_x", "mouse_y"));
   }
 
   private void startZoomedVelocityDrag(World world, Map<String, String> example) {
+    startVelocityDrag(world, example, zoomedWorldPosition(world, example));
+  }
+
+  private void startVelocityDrag(World world, Map<String, String> example, Vector2 dragEnd) {
     String bodyName = text(example, "body");
-    Vector2 screenOffset = position(example, "screen_x", "screen_y");
     world.draggedBodyName = bodyName;
     world.dragStart = find(world, bodyName).position();
-    world.dragEnd = world.viewCenter.plus(screenOffset.times(world.zoomOutMultiplier));
+    world.dragEnd = dragEnd;
+  }
+
+  private Vector2 zoomedWorldPosition(World world, Map<String, String> example) {
+    Vector2 screenOffset = position(example, "screen_x", "screen_y");
+    return world.viewCenter.plus(screenOffset.times(world.zoomOutMultiplier));
   }
 
   private void startVelocityDragFromPosition(World world, Map<String, String> example) {
