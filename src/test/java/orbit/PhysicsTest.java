@@ -147,11 +147,7 @@ class PhysicsTest {
 
     simulator.resolveCollisions(0.5);
 
-    Body alpha = simulator.findBody("alpha").orElseThrow();
-    Body beta = simulator.findBody("beta").orElseThrow();
-    assertEquals(2, simulator.bodyCount());
-    assertEquals(0.5, alpha.velocity().x(), 0.000001);
-    assertEquals(2.5, beta.velocity().x(), 0.000001);
+    assertBodiesRemainWithVelocities(simulator, 0.5, 2.5);
   }
 
   @Test
@@ -160,13 +156,11 @@ class PhysicsTest {
 
     simulator.tick(1, 0);
 
+    assertBodiesRemainWithVelocities(simulator, 0.75, 3.75);
     Body alpha = simulator.findBody("alpha").orElseThrow();
     Body beta = simulator.findBody("beta").orElseThrow();
-    assertEquals(2, simulator.bodyCount());
     assertEquals(3, alpha.position().x(), 0.000001);
     assertEquals(7, beta.position().x(), 0.000001);
-    assertEquals(0.75, alpha.velocity().x(), 0.000001);
-    assertEquals(3.75, beta.velocity().x(), 0.000001);
   }
 
   private static OrbitSimulator collisionSimulator(double alphaVelocityX, double betaX, double betaVelocityX) {
@@ -174,6 +168,18 @@ class PhysicsTest {
         new Body("alpha", "blue", 4, 3, new Vector2(0, 0), new Vector2(alphaVelocityX, 0)),
         new Body("beta", "gray", 3, 1, new Vector2(betaX, 0), new Vector2(betaVelocityX, 0))
     ));
+  }
+
+  private static void assertBodiesRemainWithVelocities(
+      OrbitSimulator simulator,
+      double alphaVelocityX,
+      double betaVelocityX
+  ) {
+    Body alpha = simulator.findBody("alpha").orElseThrow();
+    Body beta = simulator.findBody("beta").orElseThrow();
+    assertEquals(2, simulator.bodyCount());
+    assertEquals(alphaVelocityX, alpha.velocity().x(), 0.000001);
+    assertEquals(betaVelocityX, beta.velocity().x(), 0.000001);
   }
 
   @Test
