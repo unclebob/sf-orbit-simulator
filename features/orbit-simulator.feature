@@ -277,6 +277,17 @@ Feature: 2D orbit simulator
       | start_speed | speed_label | start_zoom | zoom_label | body_count |
       | 12          | 12X         | 4          | 4X         | 3          |
 
+  Scenario Outline: Click just below the control row adds an orbit body
+    Given the default orbit simulator bodies are running
+    When the empty orbit area just below the control row is clicked at position <x>, <y> using gravity constant <gravity_constant>
+    Then a body <body> is added with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>
+    And the body <body> has circular orbit speed <speed> around the sun
+    And the simulator has <body_count> bodies
+
+    Examples:
+      | x   | y | gravity_constant | body   | color | radius_px | mass | vx | vy     | speed  | body_count |
+      | 300 | 0 | 1                | body_1 | gray  | 4         | 1    | 0  | 2.5820 | 2.5820 | 4          |
+
   Scenario Outline: Horizontal scroll wheel adjusts the view center left and right
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
