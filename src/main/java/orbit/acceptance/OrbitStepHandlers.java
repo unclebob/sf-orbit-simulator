@@ -229,6 +229,10 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> world.addedBody = world.simulator.addBodyInCircularOrbit(position(example, "x", "y"), "sun", number(example, "gravity_constant"))
       ),
       Map.entry(
+          "the empty orbit area is clicked at screen offset <screen_x>, <screen_y> from the view center using gravity constant <gravity_constant>",
+          this::clickZoomedEmptyOrbitArea
+      ),
+      Map.entry(
           "a body <body> is added with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>",
           this::assertAddedBody
       ),
@@ -482,6 +486,16 @@ public class OrbitStepHandlers implements StepHandlers {
     world.simulator.restart();
     world.zoomOutMultiplier = MINIMUM_ZOOM_OUT;
     centerViewOnSun(world, example);
+  }
+
+  private void clickZoomedEmptyOrbitArea(World world, Map<String, String> example) {
+    Vector2 screenOffset = position(example, "screen_x", "screen_y");
+    Vector2 worldPosition = world.viewCenter.plus(screenOffset.times(world.zoomOutMultiplier));
+    world.addedBody = world.simulator.addBodyInCircularOrbit(
+        worldPosition,
+        "sun",
+        number(example, "gravity_constant")
+    );
   }
 
   private void assertBodyMatches(Body body, Map<String, String> example) {
