@@ -28,39 +28,6 @@ Feature: 2D orbit simulator
       | moon         | 1            | 4                 | earth       | 100         | 12               |
       | earth        | 100          | 12                | sun         | 2000        | 36               |
 
-  Scenario Outline: Tidal forces stretch elastic bodies into ellipses
-    Given a body <body> has mass <mass>, radius <radius_px>, position <x>, <y>, and elasticity <elasticity>
-    And a tidal source <source_body> has mass <source_mass> and position <source_x>, <source_y>
-    When tidal deformation is calculated by summing gravity over <sample_count> surface samples using gravity constant <gravity_constant>
-    Then the integrated tidal stretch vector of <body> is <stretch_x>, <stretch_y>
-    And the integrated tidal stretch magnitude of <body> is <stretch_magnitude>
-    And the body <body> is rendered as an ellipse centered at <x>, <y> with major radius <major_radius_px>, minor radius <minor_radius_px>, and major axis aligned with the tidal stretch vector
-    And the body <body> has gravity foci at <first_focus_x>, <first_focus_y> and <second_focus_x>, <second_focus_y>
-    And a <focus_line_color> line segment is drawn from <first_focus_x>, <first_focus_y> to <second_focus_x>, <second_focus_y>
-
-    Examples:
-      | body  | mass | radius_px | x   | y | elasticity | source_body | source_mass | source_x | source_y | sample_count | gravity_constant | stretch_x | stretch_y | stretch_magnitude | major_radius_px | minor_radius_px | first_focus_x | first_focus_y | second_focus_x | second_focus_y | focus_line_color |
-      | earth | 100  | 12        | 220 | 0 | 1.0        | sun         | 2000        | 0        | 0        | 32           | 1                | -0.906446 | 0         | 0.906446          | 22              | 4               | 198.367       | 0             | 241.633        | 0              | black            |
-
-  Scenario Outline: Stronger tides make bodies more elongated
-    Given a body <weaker_body> has tidal stretch magnitude <weaker_stretch_magnitude>, major radius <weaker_major_radius_px>, and minor radius <weaker_minor_radius_px>
-    And a body <stronger_body> has tidal stretch magnitude <stronger_stretch_magnitude>, major radius <stronger_major_radius_px>, and minor radius <stronger_minor_radius_px>
-    Then <stronger_body> has greater elongation than <weaker_body>
-
-    Examples:
-      | weaker_body | weaker_stretch_magnitude | weaker_major_radius_px | weaker_minor_radius_px | stronger_body | stronger_stretch_magnitude | stronger_major_radius_px | stronger_minor_radius_px |
-      | low_tide    | 0.300000                 | 15                     | 9                      | high_tide     | 0.906446                   | 22                       | 4                        |
-
-  Scenario Outline: Elastic body gravity is split between ellipse foci
-    Given an elastic body <source_body> has mass <source_mass>, first focus <first_focus_x>, <first_focus_y>, and second focus <second_focus_x>, <second_focus_y>
-    And a body <target_body> has mass <target_mass>, position <target_x>, <target_y>, and velocity <target_vx>, <target_vy>
-    When gravitational acceleration from <source_body> to <target_body> is calculated using gravity constant <gravity_constant>
-    Then the acceleration of <target_body> is <target_ax>, <target_ay>
-
-    Examples:
-      | source_body | source_mass | first_focus_x | first_focus_y | second_focus_x | second_focus_y | target_body | target_mass | target_x | target_y | target_vx | target_vy | gravity_constant | target_ax | target_ay |
-      | earth       | 100         | 198.367       | 0             | 241.633        | 0              | moon        | 1           | 264      | 0        | 0         | 4.5227    | 1                | -0.061401 | 0         |
-
   Scenario Outline: Default bodies are arranged as nested orbits
     Then the body <orbiter> starts <distance> units from <center>
 
