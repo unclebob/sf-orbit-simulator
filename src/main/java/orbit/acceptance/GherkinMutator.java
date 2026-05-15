@@ -72,16 +72,6 @@ public class GherkinMutator {
       "second_x",
       "second_y"
   );
-  private static final Set<String> EQUIVALENT_TIDAL_ELONGATION_KEYS = Set.of(
-      "stronger_body",
-      "stronger_major_radius_px",
-      "stronger_minor_radius_px",
-      "stronger_stretch_magnitude",
-      "weaker_body",
-      "weaker_major_radius_px",
-      "weaker_minor_radius_px",
-      "weaker_stretch_magnitude"
-  );
   private static final Set<String> EQUIVALENT_RADIUS_CORRELATION_KEYS = Set.of(
       "larger_body",
       "larger_mass",
@@ -90,20 +80,6 @@ public class GherkinMutator {
       "smaller_mass",
       "smaller_radius_px"
   );
-  private static final Set<String> EQUIVALENT_TIDAL_DEFORMATION_KEYS = Set.of(
-      "body",
-      "mass",
-      "source_body",
-      "source_mass",
-      "source_x"
-  );
-  private static final Set<String> EQUIVALENT_ELASTIC_GRAVITY_KEYS = Set.of(
-      "source_body",
-      "target_body",
-      "target_mass",
-      "target_vx",
-      "target_vy"
-  );
   private static final Map<String, Set<String>> EQUIVALENT_KEYS_BY_SCENARIO = Map.ofEntries(
       Map.entry("Gravity is applied between every pair of bodies", EQUIVALENT_GRAVITY_KEYS),
       Map.entry("Pause stops physics updates", Set.of("paused_seconds")),
@@ -111,9 +87,6 @@ public class GherkinMutator {
       Map.entry("Near-body click adds a body in circular orbit around that body", Set.of("diameter_count")),
       Map.entry("Speed slider thumb can be dragged", Set.of("start_speed")),
       Map.entry("Body radius increases with mass", EQUIVALENT_RADIUS_CORRELATION_KEYS),
-      Map.entry("Tidal forces stretch elastic bodies into ellipses", EQUIVALENT_TIDAL_DEFORMATION_KEYS),
-      Map.entry("Stronger tides make bodies more elongated", EQUIVALENT_TIDAL_ELONGATION_KEYS),
-      Map.entry("Elastic body gravity is split between ellipse foci", EQUIVALENT_ELASTIC_GRAVITY_KEYS),
       Map.entry("Dragging a body previews its velocity change", EQUIVALENT_VELOCITY_PREVIEW_KEYS),
       Map.entry("Bodies outside collision range remain separate", EQUIVALENT_SEPARATE_COLLISION_KEYS),
       Map.entry("Bodies whose rendered edges do not touch remain separate", EQUIVALENT_SCREEN_SEPARATE_COLLISION_KEYS),

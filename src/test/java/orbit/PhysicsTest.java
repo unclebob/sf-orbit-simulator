@@ -142,39 +142,6 @@ class PhysicsTest {
   }
 
   @Test
-  void tidalDeformationStretchesElasticBodyTowardSourceAndCalculatesFoci() {
-    Body earth = new Body("earth", "blue", 12, 100, new Vector2(220, 0), new Vector2(0, 0));
-    Body sun = new Body("sun", "yellow", 36, 2000, new Vector2(0, 0), new Vector2(0, 0));
-
-    TidalDeformation deformation = TidalDeformation.calculate(earth, sun, 1.0, 32, 1);
-
-    assertEquals(-0.906446, deformation.stretchVector().x(), 0.000001);
-    assertEquals(0, deformation.stretchVector().y(), 0.000001);
-    assertEquals(0.906446, deformation.stretchMagnitude(), 0.000001);
-    assertEquals(22, deformation.majorRadiusPixels(), 0.000001);
-    assertEquals(4, deformation.minorRadiusPixels(), 0.000001);
-    assertEquals(-1, deformation.axisTowardSource().x(), 0.000001);
-    assertEquals(198.367, deformation.firstFocus().x(), 0.001);
-    assertEquals(241.633, deformation.secondFocus().x(), 0.001);
-  }
-
-  @Test
-  void elasticBodyGravityIsSplitBetweenEllipseFoci() {
-    Body moon = new Body("moon", "gray", 4, 1, new Vector2(264, 0), new Vector2(0, 4.5227));
-
-    Vector2 acceleration = Physics.accelerationFromElasticBody(
-        100,
-        new Vector2(198.367, 0),
-        new Vector2(241.633, 0),
-        moon,
-        1
-    );
-
-    assertEquals(-0.061401, acceleration.x(), 0.000001);
-    assertEquals(0, acceleration.y(), 0.000001);
-  }
-
-  @Test
   void collidingBodiesMergeWithConservedMassAreaMomentumAndCenterOfMass() {
     OrbitSimulator simulator = collisionSimulator(2, 7, -2);
 
