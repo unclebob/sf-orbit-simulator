@@ -193,6 +193,18 @@ Feature: 2D orbit simulator
       | 0              | 0              | -20      | 1            | 0            | -20          | earth | 220    | 0      | 0  | 3.0151 |
       | 0              | 0              | 20       | 1            | 0            | 20           | earth | 220    | 0      | 0  | 3.0151 |
 
+  Scenario Outline: Zoomed-out scroll wheel adjusts the view center by zoomed world distance
+    Given the default orbit simulator bodies are running
+    And the view center is <start_center_x>, <start_center_y>
+    And the zoom-out slider is set to <zoom_out_multiplier>
+    When the orbit area receives scroll input <scroll_x>, <scroll_y> with scroll scale <scroll_scale>
+    Then the view center is <end_center_x>, <end_center_y>
+    And the body <body> has position <body_x>, <body_y> and velocity <vx>, <vy>
+
+    Examples:
+      | start_center_x | start_center_y | zoom_out_multiplier | scroll_x | scroll_y | scroll_scale | end_center_x | end_center_y | body  | body_x | body_y | vx | vy     |
+      | 0              | 0              | 2                   | -30      | 20       | 1            | -60          | 40           | earth | 220    | 0      | 0  | 3.0151 |
+
   Scenario Outline: Sun recenter button is available
     Then the sun recenter button label is <recenter_label>
 
