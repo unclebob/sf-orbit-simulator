@@ -140,6 +140,8 @@ class GherkinMutatorTest {
             Map.of(
                 "elapsed_seconds", "3",
                 "gravity_constant", "1",
+                "start_center_x", "120",
+                "start_center_y", "-80",
                 "x", "220"
             )
         )
@@ -148,6 +150,8 @@ class GherkinMutatorTest {
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".paused_seconds")));
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".elapsed_seconds")));
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".gravity_constant")));
+    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".start_center_x")));
+    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".start_center_y")));
     assertTrue(paths.stream().anyMatch(path -> path.endsWith(".before_pause_seconds")));
     assertTrue(paths.stream().anyMatch(path -> path.endsWith(".x")));
   }

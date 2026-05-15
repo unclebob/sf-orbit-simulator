@@ -8,6 +8,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import orbit.OrbitSimulator;
 import orbit.Vector2;
 import org.junit.jupiter.api.Test;
 
@@ -71,6 +72,23 @@ class OrbitSketchTest {
     assertEquals(List.of("translate 400.0 300.0", "scale 0.5", "translate -10.0 20.0"), sketch.operations);
   }
 
+  @Test
+  void restartButtonRestartsAndCentersTheViewOnTheResetSun() throws Exception {
+    OrbitSketch sketch = new OrbitSketch();
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+    simulator.tick(1, 1, 0.016667);
+    setInstanceField(sketch, "simulator", simulator);
+    setInstanceField(sketch, "viewCenter", new Vector2(120, -80));
+
+    pressButton(buttons().get(1), sketch);
+
+    Vector2 viewCenter = (Vector2) instanceField(sketch, "viewCenter");
+    assertEquals(0, viewCenter.x(), 0.000001);
+    assertEquals(0, viewCenter.y(), 0.000001);
+    assertEquals(0, simulator.findBody("sun").orElseThrow().position().x(), 0.000001);
+    assertEquals(0, simulator.findBody("sun").orElseThrow().position().y(), 0.000001);
+  }
+
   private static List<?> buttons() throws Exception {
     List<?> buttons = (List<?>) staticField("BUTTONS");
     assertNotNull(buttons);
@@ -82,18 +100,18 @@ class OrbitSketchTest {
   }
 
   private static Object staticField(String name) throws Exception {
-    return field(name).get(null);
+    return declaredField(name).get(null);
   }
 
   private static void setInstanceField(OrbitSketch sketch, String name, Object value) throws Exception {
-    field(name).set(sketch, value);
+    declaredField(name).set(sketch, value);
   }
 
   private static Object instanceField(OrbitSketch sketch, String name) throws Exception {
-    return field(name).get(sketch);
+    return declaredField(name).get(sketch);
   }
 
-  private static Field field(String name) throws Exception {
+  private static Field declaredField(String name) throws Exception {
     Field field = OrbitSketch.class.getDeclaredField(name);
     return accessible(field);
   }
@@ -111,6 +129,12 @@ class OrbitSketchTest {
   private static <T extends AccessibleObject> T accessible(T object) {
     object.setAccessible(true);
     return object;
+  }
+
+  private static void pressButton(Object button, OrbitSketch sketch) throws Exception {
+    Method press = button.getClass().getDeclaredMethod("press", OrbitSketch.class);
+    press.setAccessible(true);
+    press.invoke(button, sketch);
   }
 
   private static void assertButtonAction(Object button, String actionName) throws Exception {
