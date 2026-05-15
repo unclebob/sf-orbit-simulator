@@ -126,6 +126,23 @@ class OrbitSketchTest {
   }
 
   @Test
+  void zoomSliderGutterClickIsIgnored() throws Exception {
+    OrbitSketch sketch = new OrbitSketch();
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+    setInstanceField(sketch, "simulator", simulator);
+    setInstanceField(sketch, "zoomOutMultiplier", 4);
+    Object slider = staticField("ZOOM_SLIDER");
+    sketch.mouseX = (int) invoke(slider, "x") - 20;
+    sketch.mouseY = (int) invoke(slider, "y");
+
+    sketch.mousePressed();
+
+    assertEquals("NONE", instanceField(sketch, "dragAction").toString());
+    assertEquals(4, instanceField(sketch, "zoomOutMultiplier"));
+    assertEquals(3, simulator.bodyCount());
+  }
+
+  @Test
   void viewTransformCentersThenScalesThenOffsetsTheWorld() throws Exception {
     RecordingSketch sketch = new RecordingSketch();
     sketch.width = 800;
