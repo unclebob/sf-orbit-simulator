@@ -79,17 +79,20 @@ Feature: 2D orbit simulator
     Given the default orbit simulator bodies are running
     And the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>
     And the view center is <start_center_x>, <start_center_y>
+    And the zoom-out slider is set to <start_zoom>
     When the restart button is pressed
     Then the simulation is running
     And the control button label is <pause_label>
     And the view center is <end_center_x>, <end_center_y>
+    And the zoom-out slider value is <end_zoom>
+    And the zoom-out slider label is <zoom_label>
     And the body <body> has position <x>, <y> and velocity <vx>, <vy>
 
     Examples:
-      | elapsed_seconds | gravity_constant | substep_seconds | start_center_x | start_center_y | pause_label | end_center_x | end_center_y | body  | x   | y | vx | vy     |
-      | 3               | 1                | 0.016667        | 120            | -80            | Pause       | 0            | 0            | sun   | 0   | 0 | 0  | 0      |
-      | 3               | 1                | 0.016667        | 120            | -80            | Pause       | 0            | 0            | earth | 220 | 0 | 0  | 3.0151 |
-      | 3               | 1                | 0.016667        | 120            | -80            | Pause       | 0            | 0            | moon  | 264 | 0 | 0  | 4.5227 |
+      | elapsed_seconds | gravity_constant | substep_seconds | start_center_x | start_center_y | start_zoom | pause_label | end_center_x | end_center_y | end_zoom | zoom_label | body  | x   | y | vx | vy     |
+      | 3               | 1                | 0.016667        | 120            | -80            | 4          | Pause       | 0            | 0            | 1        | 1X         | sun   | 0   | 0 | 0  | 0      |
+      | 3               | 1                | 0.016667        | 120            | -80            | 4          | Pause       | 0            | 0            | 1        | 1X         | earth | 220 | 0 | 0  | 3.0151 |
+      | 3               | 1                | 0.016667        | 120            | -80            | 4          | Pause       | 0            | 0            | 1        | 1X         | moon  | 264 | 0 | 0  | 4.5227 |
 
   Scenario Outline: Speed slider is available with a default multiplier
     Then the speed slider has minimum <minimum_speed>, maximum <maximum_speed>, step <speed_step>, value <default_speed>, and label <default_label>
@@ -155,6 +158,17 @@ Feature: 2D orbit simulator
       | start_center_x | start_center_y | zoom_out_multiplier | zoom_label | screen_pixels | world_units | end_center_x | end_center_y |
       | 0              | 0              | 2                   | 2X         | 50            | 100         | 0            | 0            |
 
+  Scenario Outline: Zoom-out slider thumb can be dragged
+    Given the default orbit simulator bodies are running
+    And the zoom-out slider is set to <start_zoom>
+    When the zoom-out slider thumb is dragged to <end_zoom>
+    Then the zoom-out slider value is <end_zoom>
+    And the zoom-out slider label is <zoom_label>
+
+    Examples:
+      | start_zoom | end_zoom | zoom_label |
+      | 1          | 4        | 4X         |
+
   Scenario Outline: Horizontal scroll wheel adjusts the view center left and right
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
@@ -190,13 +204,16 @@ Feature: 2D orbit simulator
     Given the default orbit simulator bodies are running
     And the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>
     And the view center is <start_center_x>, <start_center_y>
+    And the zoom-out slider is set to <start_zoom>
     When the sun recenter button is pressed
     Then the view center is <sun_x>, <sun_y>
+    And the zoom-out slider value is <end_zoom>
+    And the zoom-out slider label is <zoom_label>
     And the body <body> has position <sun_x>, <sun_y> and velocity <vx>, <vy>
 
     Examples:
-      | elapsed_seconds | gravity_constant | substep_seconds | start_center_x | start_center_y | sun_x  | sun_y | body | vx     | vy |
-      | 1               | 1                | 0.016667        | 120            | -80            | 0.0010 | 0     | sun  | 0.0021 | 0  |
+      | elapsed_seconds | gravity_constant | substep_seconds | start_center_x | start_center_y | start_zoom | sun_x  | sun_y | end_zoom | zoom_label | body | vx     | vy |
+      | 1               | 1                | 0.016667        | 120            | -80            | 4          | 0.0010 | 0     | 4        | 4X         | sun  | 0.0021 | 0  |
 
   Scenario Outline: Empty orbit area click adds a body in circular orbit around the sun
     Given the default orbit simulator bodies are running
