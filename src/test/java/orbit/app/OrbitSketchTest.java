@@ -73,6 +73,19 @@ class OrbitSketchTest {
   }
 
   @Test
+  void scrollAdjustsTheViewCenterByZoomedWorldDistance() throws Exception {
+    OrbitSketch sketch = new OrbitSketch();
+    setInstanceField(sketch, "zoomOutMultiplier", 2);
+    setInstanceField(sketch, "viewCenter", new Vector2(0, 0));
+
+    instanceMethod("adjustViewCenter", Vector2.class, double.class).invoke(sketch, new Vector2(-30, 20), 1.0);
+
+    Vector2 viewCenter = (Vector2) instanceField(sketch, "viewCenter");
+    assertEquals(-60, viewCenter.x(), 0.000001);
+    assertEquals(40, viewCenter.y(), 0.000001);
+  }
+
+  @Test
   void restartButtonRestartsCentersTheViewAndResetsZoom() throws Exception {
     OrbitSketch sketch = new OrbitSketch();
     OrbitSimulator simulator = OrbitSimulator.defaults();
@@ -119,7 +132,11 @@ class OrbitSketchTest {
   }
 
   private static Method instanceMethod(String name) throws Exception {
-    Method method = OrbitSketch.class.getDeclaredMethod(name);
+    return instanceMethod(name, new Class<?>[0]);
+  }
+
+  private static Method instanceMethod(String name, Class<?>... parameterTypes) throws Exception {
+    Method method = OrbitSketch.class.getDeclaredMethod(name, parameterTypes);
     return accessible(method);
   }
 

@@ -469,7 +469,7 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private void scrollViewCenter(World world, Map<String, String> example) {
     Vector2 scroll = position(example, "scroll_x", "scroll_y");
-    world.viewCenter = world.viewCenter.plus(scroll.times(number(example, "scroll_scale")));
+    world.viewCenter = world.viewCenter.plus(scaledScroll(world, example, scroll));
   }
 
   private void scrollViewCenterHorizontally(World world, Map<String, String> example) {
@@ -482,7 +482,11 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private void scrollViewCenterBy(World world, Map<String, String> example, double scrollX, double scrollY) {
     Vector2 scroll = new Vector2(scrollX, scrollY);
-    world.viewCenter = world.viewCenter.plus(scroll.times(number(example, "scroll_scale")));
+    world.viewCenter = world.viewCenter.plus(scaledScroll(world, example, scroll));
+  }
+
+  private Vector2 scaledScroll(World world, Map<String, String> example, Vector2 scroll) {
+    return scroll.times(number(example, "scroll_scale") * world.zoomOutMultiplier);
   }
 
   private void assertSunRecenterLabel(World world, Map<String, String> example) {

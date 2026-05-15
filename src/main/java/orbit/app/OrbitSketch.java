@@ -157,7 +157,7 @@ public class OrbitSketch extends PApplet {
   }
 
   private void adjustViewCenter(Vector2 scroll, double scrollScale) {
-    viewCenter = viewCenter.plus(scroll.times(scrollScale));
+    viewCenter = viewCenter.plus(scroll.times(scrollScale * zoomOutMultiplier));
   }
 
   private void centerViewOnSun() {
