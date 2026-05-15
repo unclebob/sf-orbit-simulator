@@ -501,19 +501,17 @@ public class OrbitStepHandlers implements StepHandlers {
   }
 
   private void clickZoomedEmptyOrbitArea(World world, Map<String, String> example) {
-    Vector2 worldPosition = zoomedWorldPosition(world, example);
-    world.addedBody = world.simulator.addBodyInCircularOrbit(
-        worldPosition,
-        "sun",
-        number(example, "gravity_constant")
-    );
+    addZoomedCircularOrbitBody(world, example, "sun");
   }
 
   private void clickZoomedOrbitAreaNearBody(World world, Map<String, String> example) {
-    Vector2 worldPosition = zoomedWorldPosition(world, example);
+    addZoomedCircularOrbitBody(world, example, text(example, "center_body"));
+  }
+
+  private void addZoomedCircularOrbitBody(World world, Map<String, String> example, String centerBody) {
     world.addedBody = world.simulator.addBodyInCircularOrbit(
-        worldPosition,
-        text(example, "center_body"),
+        zoomedWorldPosition(world, example),
+        centerBody,
         number(example, "gravity_constant")
     );
   }
