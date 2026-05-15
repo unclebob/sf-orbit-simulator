@@ -133,6 +133,26 @@ Feature: 2D orbit simulator
       | start_speed | end_speed | speed_label |
       | 1           | 12        | 12X         |
 
+  Scenario Outline: Zoom-out slider is available with a default multiplier
+    Then the zoom-out slider has minimum <minimum_zoom>, maximum <maximum_zoom>, step <zoom_step>, value <default_zoom>, and label <default_label>
+
+    Examples:
+      | minimum_zoom | maximum_zoom | zoom_step | default_zoom | default_label |
+      | 1            | 5            | 1         | 1            | 1X            |
+
+  Scenario Outline: Zoom-out slider scales the orbit view
+    Given the default orbit simulator bodies are running
+    And the view center is <start_center_x>, <start_center_y>
+    When the zoom-out slider is set to <zoom_out_multiplier>
+    Then the zoom-out slider value is <zoom_out_multiplier>
+    And the zoom-out slider label is <zoom_label>
+    And the orbit view renders <screen_pixels> screen pixels for <world_units> world units
+    And the view center is <end_center_x>, <end_center_y>
+
+    Examples:
+      | start_center_x | start_center_y | zoom_out_multiplier | zoom_label | screen_pixels | world_units | end_center_x | end_center_y |
+      | 0              | 0              | 2                   | 2X         | 50            | 100         | 0            | 0            |
+
   Scenario Outline: Horizontal scroll wheel adjusts the view center left and right
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
