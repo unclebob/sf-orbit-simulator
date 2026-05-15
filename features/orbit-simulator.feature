@@ -294,6 +294,19 @@ Feature: 2D orbit simulator
       | x   | y  | diameter_count | center_body | gravity_constant | body   | color | radius_px | mass | vx      | vy     | speed  | body_count |
       | 220 | 60 | 4              | earth       | 1                | body_1 | gray  | 4         | 1    | -1.2910 | 3.0151 | 1.2910 | 4          |
 
+  Scenario Outline: Zoomed-out near-body click adds a body orbiting the zoomed world center
+    Given the default orbit simulator bodies are running
+    And the view center is <start_center_x>, <start_center_y>
+    And the zoom-out slider is set to <zoom_out_multiplier>
+    When the orbit area is clicked at screen offset <screen_x>, <screen_y> from the view center within <diameter_count> diameters of <center_body> using gravity constant <gravity_constant>
+    Then a body <body> is added orbiting <center_body> with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>
+    And the body <body> has circular orbit speed <speed> around <center_body>
+    And the simulator has <body_count> bodies
+
+    Examples:
+      | start_center_x | start_center_y | zoom_out_multiplier | screen_x | screen_y | diameter_count | center_body | gravity_constant | x   | y  | body   | color | radius_px | mass | vx      | vy     | speed  | body_count |
+      | 0              | 0              | 2                   | 110      | 30       | 4              | earth       | 1                | 220 | 60 | body_1 | gray  | 4         | 1    | -1.2910 | 3.0151 | 1.2910 | 4          |
+
   Scenario Outline: Releasing a dragged orbiting body updates its velocity vector
     Given the default orbit simulator bodies are running
     And the body <body> orbits <center_body>
