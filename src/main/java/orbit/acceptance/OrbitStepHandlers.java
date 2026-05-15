@@ -291,6 +291,10 @@ public class OrbitStepHandlers implements StepHandlers {
           this::clickEmptyOrbitArea
       ),
       Map.entry(
+          "the empty orbit area just above the control row is clicked at position <x>, <y> using gravity constant <gravity_constant>",
+          this::clickEmptyOrbitArea
+      ),
+      Map.entry(
           "the empty orbit area is clicked at screen offset <screen_x>, <screen_y> from the view center using gravity constant <gravity_constant>",
           this::clickZoomedEmptyOrbitArea
       ),
