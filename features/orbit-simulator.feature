@@ -158,6 +158,17 @@ Feature: 2D orbit simulator
       | start_center_x | start_center_y | zoom_out_multiplier | zoom_label | screen_pixels | world_units | end_center_x | end_center_y |
       | 0              | 0              | 2                   | 2X         | 50            | 100         | 0            | 0            |
 
+  Scenario Outline: Zoom-out slider thumb can be dragged
+    Given the default orbit simulator bodies are running
+    And the zoom-out slider is set to <start_zoom>
+    When the zoom-out slider thumb is dragged to <end_zoom>
+    Then the zoom-out slider value is <end_zoom>
+    And the zoom-out slider label is <zoom_label>
+
+    Examples:
+      | start_zoom | end_zoom | zoom_label |
+      | 1          | 4        | 4X         |
+
   Scenario Outline: Horizontal scroll wheel adjusts the view center left and right
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
