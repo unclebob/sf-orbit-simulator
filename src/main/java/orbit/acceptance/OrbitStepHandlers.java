@@ -287,6 +287,10 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> world.addedBody = world.simulator.addBodyInCircularOrbit(position(example, "x", "y"), "sun", number(example, "gravity_constant"))
       ),
       Map.entry(
+          "the empty orbit area just below the control row is clicked at position <x>, <y> using gravity constant <gravity_constant>",
+          (world, example) -> world.addedBody = world.simulator.addBodyInCircularOrbit(position(example, "x", "y"), "sun", number(example, "gravity_constant"))
+      ),
+      Map.entry(
           "the empty orbit area is clicked at screen offset <screen_x>, <screen_y> from the view center using gravity constant <gravity_constant>",
           this::clickZoomedEmptyOrbitArea
       ),
