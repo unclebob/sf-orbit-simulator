@@ -226,6 +226,19 @@ Feature: 2D orbit simulator
       | x   | y | gravity_constant | body   | color | radius_px | mass | vx | vy     | speed  | body_count |
       | 300 | 0 | 1                | body_1 | gray  | 4         | 1    | 0  | 2.5820 | 2.5820 | 4          |
 
+  Scenario Outline: Zoomed-out empty orbit area click adds a body at the zoomed world position
+    Given the default orbit simulator bodies are running
+    And the view center is <start_center_x>, <start_center_y>
+    And the zoom-out slider is set to <zoom_out_multiplier>
+    When the empty orbit area is clicked at screen offset <screen_x>, <screen_y> from the view center using gravity constant <gravity_constant>
+    Then a body <body> is added with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>
+    And the body <body> has circular orbit speed <speed> around the sun
+    And the simulator has <body_count> bodies
+
+    Examples:
+      | start_center_x | start_center_y | zoom_out_multiplier | screen_x | screen_y | gravity_constant | x   | y | body   | color | radius_px | mass | vx | vy     | speed  | body_count |
+      | 0              | 0              | 2                   | 150      | 0        | 1                | 300 | 0 | body_1 | gray  | 4         | 1    | 0  | 2.5820 | 2.5820 | 4          |
+
   Scenario Outline: Dragging a body previews its velocity change
     Given the default orbit simulator bodies are running
     When the body <body> is dragged toward mouse position <mouse_x>, <mouse_y>
