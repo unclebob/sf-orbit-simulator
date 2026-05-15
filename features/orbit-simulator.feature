@@ -236,3 +236,16 @@ Feature: 2D orbit simulator
     Examples:
       | first_body | first_color | first_radius_px | first_mass | first_x | first_y | first_vx | first_vy | second_body | second_color | second_radius_px | second_mass | second_x | second_y | second_vx | second_vy | restitution | screen_distance_px | touch_distance_px | body_count | first_after_vx | first_after_vy | second_after_vx | second_after_vy |
       | alpha      | blue        | 4               | 3          | 0       | 0       | 2        | 0        | beta        | gray         | 3                | 1           | 7        | 0        | -2        | 0         | 0.5         | 7                  | 7                 | 2          | 0.5            | 0              | 2.5             | 0               |
+
+  Scenario Outline: Bodies whose rendered edges overlap are separated until they only touch
+    Given a body <first_body> has color <first_color>, radius <first_radius_px>, mass <first_mass>, position <first_x>, <first_y>, and velocity <first_vx>, <first_vy>
+    And a body <second_body> has color <second_color>, radius <second_radius_px>, mass <second_mass>, position <second_x>, <second_y>, and velocity <second_vx>, <second_vy>
+    When screen collisions are resolved using rendered body edges and restitution <restitution>
+    Then the simulator has <body_count> bodies
+    And the original rendered body centers were <screen_distance_px> pixels apart
+    And the resolved rendered body centers are at least <minimum_screen_distance_px> pixels apart
+    And the resolved rendered body edges can touch at screen distance <touch_distance_px>
+
+    Examples:
+      | first_body | first_color | first_radius_px | first_mass | first_x | first_y | first_vx | first_vy | second_body | second_color | second_radius_px | second_mass | second_x | second_y | second_vx | second_vy | restitution | screen_distance_px | minimum_screen_distance_px | touch_distance_px | body_count |
+      | alpha      | blue        | 4               | 3          | 0       | 0       | 0        | 0        | beta        | gray         | 3                | 1           | 6        | 0        | 0         | 0         | 0.5         | 6                  | 7                          | 7                 | 2          |
