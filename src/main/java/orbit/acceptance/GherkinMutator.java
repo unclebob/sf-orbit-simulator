@@ -26,6 +26,7 @@ public class GherkinMutator {
   private static final Set<String> EQUIVALENT_RESTART_KEYS = Set.of(
       "elapsed_seconds",
       "gravity_constant",
+      "start_zoom",
       "start_center_x",
       "start_center_y",
       "substep_seconds"

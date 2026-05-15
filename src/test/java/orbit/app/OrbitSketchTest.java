@@ -51,12 +51,14 @@ class OrbitSketchTest {
     simulator.tick(1, 1, 0.016667);
     setInstanceField(sketch, "simulator", simulator);
     setInstanceField(sketch, "viewCenter", new Vector2(120, -80));
+    setInstanceField(sketch, "zoomOutMultiplier", 4);
 
     pressButton(buttons().get(1), sketch);
 
     Vector2 viewCenter = (Vector2) instanceField(sketch, "viewCenter");
     assertEquals(0, viewCenter.x(), 0.000001);
     assertEquals(0, viewCenter.y(), 0.000001);
+    assertEquals(1, instanceField(sketch, "zoomOutMultiplier"));
     assertEquals(0, simulator.findBody("sun").orElseThrow().position().x(), 0.000001);
     assertEquals(0, simulator.findBody("sun").orElseThrow().position().y(), 0.000001);
   }
