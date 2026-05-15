@@ -66,13 +66,25 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> tick(world, example, "before_pause_seconds")
       ),
       Map.entry(
+          "the simulator has advanced by <before_pause_seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>",
+          (world, example) -> tickVerlet(world, example, "before_pause_seconds")
+      ),
+      Map.entry(
           "the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant> and symplectic integration",
           (world, example) -> tick(world, example, "elapsed_seconds")
+      ),
+      Map.entry(
+          "the simulator has advanced by <elapsed_seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>",
+          (world, example) -> tickVerlet(world, example, "elapsed_seconds")
       ),
       Map.entry("the pause button is pressed", (world, example) -> world.simulator.togglePause()),
       Map.entry(
           "the simulator attempts to advance by <paused_seconds> seconds using gravity constant <gravity_constant> and symplectic integration",
           (world, example) -> tick(world, example, "paused_seconds")
+      ),
+      Map.entry(
+          "the simulator attempts to advance by <paused_seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>",
+          (world, example) -> tickVerlet(world, example, "paused_seconds")
       ),
       Map.entry("the simulation is paused", (world, example) -> assertTrue(world.simulator.isPaused(), "simulation should be paused")),
       Map.entry("the restart button is pressed", (world, example) -> world.simulator.restart()),
@@ -82,6 +94,10 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry(
           "the simulator advances by <seconds> seconds using gravity constant <gravity_constant> and symplectic integration",
           (world, example) -> tick(world, example, "seconds")
+      ),
+      Map.entry(
+          "the simulator advances by <seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>",
+          (world, example) -> tickVerlet(world, example, "seconds")
       ),
       Map.entry("the body <body> has position <x>, <y> and velocity <vx>, <vy>", this::assertBodyState),
       Map.entry(
@@ -103,6 +119,26 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry(
           "the simulator advances display time by <display_seconds> seconds using gravity constant <gravity_constant> and symplectic integration",
           (world, example) -> world.simulator.advanceDisplayTime(number(example, "display_seconds"), number(example, "gravity_constant"))
+      ),
+      Map.entry(
+          "the simulator advances display time by <display_seconds> seconds using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>",
+          (world, example) -> world.simulator.advanceDisplayTime(
+              number(example, "display_seconds"),
+              number(example, "gravity_constant"),
+              number(example, "substep_seconds")
+          )
+      ),
+      Map.entry(
+          "one simulator advances <physics_seconds> seconds in one display frame using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>",
+          this::advanceOneFrameSimulator
+      ),
+      Map.entry(
+          "another identical simulator advances <physics_seconds> seconds in <frame_count> display frames using gravity constant <gravity_constant>, velocity Verlet integration, and fixed substep <substep_seconds>",
+          this::advanceManyFrameSimulator
+      ),
+      Map.entry(
+          "both simulations place body <body> at the same position and velocity",
+          this::assertSimulationsMatch
       ),
       Map.entry(
           "the simulator has advanced physics time by <physics_seconds> seconds",
@@ -198,6 +234,10 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry("collisions are resolved", (world, example) -> world.simulator.resolveCollisions()),
       Map.entry("screen collisions are resolved using rendered body edges", (world, example) -> world.simulator.resolveCollisions()),
       Map.entry(
+          "screen collisions are resolved using rendered body edges and restitution <restitution>",
+          (world, example) -> world.simulator.resolveCollisions(number(example, "restitution"))
+      ),
+      Map.entry(
           "the body <first_body> has position <first_x>, <first_y> and velocity <first_vx>, <first_vy>",
           (world, example) -> assertPrefixedBodyState(world, example, "first")
       ),
@@ -218,8 +258,12 @@ public class OrbitStepHandlers implements StepHandlers {
           this::assertOriginalTouchDistance
       ),
       Map.entry(
-          "the merged body has color <merged_color>, radius <merged_radius_px>, mass <merged_mass>, position <merged_x>, <merged_y>, and velocity <merged_vx>, <merged_vy>",
-          this::assertMergedBody
+          "the body <first_body> is still visible with color <first_color>, radius <first_radius_px>, mass <first_mass>, position <first_x>, <first_y>, and velocity <first_after_vx>, <first_after_vy>",
+          (world, example) -> assertBodyStillVisible(world, example, "first")
+      ),
+      Map.entry(
+          "the body <second_body> is still visible with color <second_color>, radius <second_radius_px>, mass <second_mass>, position <second_x>, <second_y>, and velocity <second_after_vx>, <second_after_vy>",
+          (world, example) -> assertBodyStillVisible(world, example, "second")
       ),
       Map.entry(
           "the body <body> is dragged to apoapsis position <apoapsis_x>, <apoapsis_y> using gravity constant <gravity_constant>",
@@ -256,6 +300,14 @@ public class OrbitStepHandlers implements StepHandlers {
     world.simulator.tick(number(example, secondsKey), number(example, "gravity_constant"));
   }
 
+  private void tickVerlet(World world, Map<String, String> example, String secondsKey) {
+    world.simulator.tick(
+        number(example, secondsKey),
+        number(example, "gravity_constant"),
+        number(example, "substep_seconds")
+    );
+  }
+
   private void assertControlLabel(World world, Map<String, String> example, String labelKey) {
     assertEquals(text(example, labelKey), world.simulator.controlButtonLabel());
   }
@@ -266,6 +318,35 @@ public class OrbitStepHandlers implements StepHandlers {
     assertNumber(example, "speed_step", OrbitSimulator.SPEED_STEP);
     assertNumber(example, "default_speed", world.simulator.speedMultiplier());
     assertEquals(text(example, "default_label"), world.simulator.speedLabel());
+  }
+
+  private void advanceOneFrameSimulator(World world, Map<String, String> example) {
+    world.simulator = OrbitSimulator.defaults();
+    world.simulator.advanceDisplayTime(
+        number(example, "physics_seconds"),
+        number(example, "gravity_constant"),
+        number(example, "substep_seconds")
+    );
+  }
+
+  private void advanceManyFrameSimulator(World world, Map<String, String> example) {
+    world.otherSimulator = OrbitSimulator.defaults();
+    int frameCount = (int) number(example, "frame_count");
+    double displaySeconds = number(example, "physics_seconds") / frameCount;
+    for (int frame = 0; frame < frameCount; frame++) {
+      world.otherSimulator.advanceDisplayTime(
+          displaySeconds,
+          number(example, "gravity_constant"),
+          number(example, "substep_seconds")
+      );
+    }
+  }
+
+  private void assertSimulationsMatch(World world, Map<String, String> example) {
+    Body first = find(world.simulator, text(example, "body"));
+    Body second = find(world.otherSimulator, text(example, "body"));
+    assertVector(first.position(), second.position().x(), second.position().y());
+    assertVector(first.velocity(), second.velocity().x(), second.velocity().y());
   }
 
   private void assertAddedBody(World world, Map<String, String> example) {
@@ -395,14 +476,13 @@ public class OrbitStepHandlers implements StepHandlers {
     return world.firstCollisionBody.position().minus(world.secondCollisionBody.position()).magnitude();
   }
 
-  private void assertMergedBody(World world, Map<String, String> example) {
-    assertEquals(1, world.simulator.bodyCount());
-    Body body = world.simulator.bodies().getFirst();
-    assertEquals(text(example, "merged_color"), body.color());
-    assertNumber(example, "merged_radius_px", body.radiusPixels());
-    assertNumber(example, "merged_mass", body.mass());
-    assertVector(body.position(), example, "merged_x", "merged_y");
-    assertVector(body.velocity(), example, "merged_vx", "merged_vy");
+  private void assertBodyStillVisible(World world, Map<String, String> example, String prefix) {
+    Body body = find(world, text(example, prefix + "_body"));
+    assertEquals(text(example, prefix + "_color"), body.color());
+    assertNumber(example, prefix + "_radius_px", body.radiusPixels());
+    assertNumber(example, prefix + "_mass", body.mass());
+    assertVector(body.position(), example, prefix + "_x", prefix + "_y");
+    assertVector(body.velocity(), example, prefix + "_after_vx", prefix + "_after_vy");
   }
 
   private void assertBodyOrbitsCenter(World world, Map<String, String> example) {
@@ -443,7 +523,12 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private Body find(World world, String name) {
     assertTrue(world.simulator != null, "simulator has not been opened");
-    return world.simulator.findBody(name).orElseThrow(() -> new IllegalArgumentException("missing body: " + name));
+    return find(world.simulator, name);
+  }
+
+  private Body find(OrbitSimulator simulator, String name) {
+    assertTrue(simulator != null, "simulator has not been opened");
+    return simulator.findBody(name).orElseThrow(() -> new IllegalArgumentException("missing body: " + name));
   }
 
   private Body find(List<Body> bodies, String name) {
@@ -491,6 +576,9 @@ public class OrbitStepHandlers implements StepHandlers {
   }
 
   private double toleranceFor(String expected) {
+    if ("0".equals(expected)) {
+      return TOLERANCE;
+    }
     int decimal = expected.indexOf('.');
     if (decimal < 0) {
       return 0.000001;

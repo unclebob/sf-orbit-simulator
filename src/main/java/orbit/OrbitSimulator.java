@@ -8,9 +8,11 @@ public class OrbitSimulator {
   public static final int MINIMUM_SPEED = 1;
   public static final int MAXIMUM_SPEED = 20;
   public static final int SPEED_STEP = 1;
+  public static final double DEFAULT_SUBSTEP_SECONDS = 1.0 / 60.0;
   private static final String ADDED_BODY_COLOR = "gray";
   private static final double ADDED_BODY_RADIUS = 4;
   private static final double ADDED_BODY_MASS = 1;
+  private static final double DEFAULT_RESTITUTION = 0.5;
 
   private final List<Body> bodies;
   private final List<Body> initialBodies;
@@ -99,36 +101,52 @@ public class OrbitSimulator {
   }
 
   public void tick(double seconds, double gravityConstant) {
+    tick(seconds, gravityConstant, DEFAULT_SUBSTEP_SECONDS);
+  }
+
+  public void tick(double seconds, double gravityConstant, double substepSeconds) {
     if (paused) {
       return;
     }
     elapsedPhysicsSeconds += seconds;
-    List<Vector2> accelerations = Physics.accelerations(bodies, gravityConstant);
-    for (int i = 0; i < bodies.size(); i++) {
-      Body body = bodies.get(i);
-      Vector2 velocity = body.velocity().plus(accelerations.get(i).times(seconds));
-      Vector2 position = body.position().plus(velocity.times(seconds));
-      bodies.set(i, body.withPositionAndVelocity(position, velocity));
+    int substeps = Math.max(1, (int) Math.round(seconds / substepSeconds));
+    double stepSeconds = seconds / substeps;
+    for (int step = 0; step < substeps; step++) {
+      velocityVerletStep(stepSeconds, gravityConstant);
     }
     resolveCollisions();
   }
 
-  public void resolveCollisions() {
-    while (resolveFirstCollision()) {
+  private void velocityVerletStep(double seconds, double gravityConstant) {
+    List<Vector2> startingAccelerations = Physics.accelerations(bodies, gravityConstant);
+    for (int i = 0; i < bodies.size(); i++) {
+      Body body = bodies.get(i);
+      Vector2 position = body.position()
+          .plus(body.velocity().times(seconds))
+          .plus(startingAccelerations.get(i).times(0.5 * seconds * seconds));
+      bodies.set(i, body.withPositionAndVelocity(position, body.velocity()));
+    }
+    List<Vector2> endingAccelerations = Physics.accelerations(bodies, gravityConstant);
+    for (int i = 0; i < bodies.size(); i++) {
+      Body body = bodies.get(i);
+      Vector2 velocity = body.velocity()
+          .plus(startingAccelerations.get(i).plus(endingAccelerations.get(i)).times(0.5 * seconds));
+      bodies.set(i, body.withPositionAndVelocity(body.position(), velocity));
     }
   }
 
-  private boolean resolveFirstCollision() {
+  public void resolveCollisions() {
+    resolveCollisions(DEFAULT_RESTITUTION);
+  }
+
+  public void resolveCollisions(double restitution) {
     for (int first = 0; first < bodies.size(); first++) {
       for (int second = first + 1; second < bodies.size(); second++) {
         if (areColliding(bodies.get(first), bodies.get(second))) {
-          bodies.set(first, merge(bodies.get(first), bodies.get(second)));
-          bodies.remove(second);
-          return true;
+          collide(first, second, restitution);
         }
       }
     }
-    return false;
   }
 
   public void togglePause() {
@@ -176,7 +194,11 @@ public class OrbitSimulator {
   }
 
   public void advanceDisplayTime(double displaySeconds, double gravityConstant) {
-    tick(displaySeconds * speedMultiplier, gravityConstant);
+    advanceDisplayTime(displaySeconds, gravityConstant, DEFAULT_SUBSTEP_SECONDS);
+  }
+
+  public void advanceDisplayTime(double displaySeconds, double gravityConstant, double substepSeconds) {
+    tick(displaySeconds * speedMultiplier, gravityConstant, substepSeconds);
   }
 
   private Optional<Body> nearbyOrbitCenter(Vector2 position) {
@@ -190,16 +212,26 @@ public class OrbitSimulator {
     return distance <= first.radiusPixels() + second.radiusPixels();
   }
 
-  private Body merge(Body first, Body second) {
-    double mass = first.mass() + second.mass();
-    Vector2 position = first.position().times(first.mass())
-        .plus(second.position().times(second.mass()))
-        .times(1.0 / mass);
-    Vector2 velocity = first.velocity().times(first.mass())
-        .plus(second.velocity().times(second.mass()))
-        .times(1.0 / mass);
-    double radius = Math.sqrt(first.radiusPixels() * first.radiusPixels() + second.radiusPixels() * second.radiusPixels());
-    return new Body(first.name(), first.color(), radius, mass, position, velocity, first.orbitCenter(), first.periapsisDistance());
+  private void collide(int firstIndex, int secondIndex, double restitution) {
+    Body first = bodies.get(firstIndex);
+    Body second = bodies.get(secondIndex);
+    Vector2 normal = second.position().minus(first.position());
+    double distance = normal.magnitude();
+    if (distance == 0) {
+      return;
+    }
+    Vector2 unitNormal = normal.times(1.0 / distance);
+    Vector2 relativeVelocity = second.velocity().minus(first.velocity());
+    double velocityAlongNormal = relativeVelocity.x() * unitNormal.x() + relativeVelocity.y() * unitNormal.y();
+    if (velocityAlongNormal >= 0) {
+      return;
+    }
+    double impulse = -(1.0 + restitution) * velocityAlongNormal / (1.0 / first.mass() + 1.0 / second.mass());
+    Vector2 impulseVector = unitNormal.times(impulse);
+    Body updatedFirst = first.withPositionAndVelocity(first.position(), first.velocity().minus(impulseVector.times(1.0 / first.mass())));
+    Body updatedSecond = second.withPositionAndVelocity(second.position(), second.velocity().plus(impulseVector.times(1.0 / second.mass())));
+    bodies.set(firstIndex, updatedFirst);
+    bodies.set(secondIndex, updatedSecond);
   }
 
   private Vector2 circularOrbitVelocity(Vector2 position, Body center, double gravityConstant) {

@@ -19,35 +19,35 @@ class PhysicsTest {
   }
 
   @Test
-  void symplecticTickUpdatesVelocityBeforePosition() {
+  void tickUsesVelocityVerletSubsteps() {
     OrbitSimulator simulator = OrbitSimulator.defaults();
 
-    simulator.tick(1, 1);
+    simulator.tick(1, 1, 0.016667);
 
     Body earth = simulator.findBody("earth").orElseThrow();
-    assertEquals(219.9592, earth.position().x(), 0.0001);
-    assertEquals(3.0151, earth.position().y(), 0.0001);
+    assertEquals(219.9796, earth.position().x(), 0.0001);
+    assertEquals(3.0150, earth.position().y(), 0.0001);
     assertEquals(-0.0408, earth.velocity().x(), 0.0001);
-    assertEquals(3.0151, earth.velocity().y(), 0.0001);
+    assertEquals(3.0148, earth.velocity().y(), 0.0001);
   }
 
   @Test
   void pauseSkipsTicksAndChangesControlLabel() {
     OrbitSimulator simulator = OrbitSimulator.defaults();
-    simulator.tick(1, 1);
+    simulator.tick(1, 1, 0.016667);
     simulator.togglePause();
 
     simulator.tick(5, 1);
 
     Body earth = simulator.findBody("earth").orElseThrow();
-    assertEquals(219.9592, earth.position().x(), 0.0001);
+    assertEquals(219.9796, earth.position().x(), 0.0001);
     assertEquals("Resume", simulator.controlButtonLabel());
   }
 
   @Test
   void restartRestoresInitialBodiesAndRunningState() {
     OrbitSimulator simulator = OrbitSimulator.defaults();
-    simulator.tick(3, 1);
+    simulator.tick(3, 1, 0.016667);
     simulator.togglePause();
 
     simulator.restart();
@@ -63,12 +63,12 @@ class PhysicsTest {
     OrbitSimulator simulator = OrbitSimulator.defaults();
     simulator.setSpeedMultiplier(2);
 
-    simulator.advanceDisplayTime(1, 1);
+    simulator.advanceDisplayTime(1, 1, 0.016667);
 
     Body earth = simulator.findBody("earth").orElseThrow();
     assertEquals(2, simulator.elapsedPhysicsSeconds(), 0.000001);
-    assertEquals(219.8368, earth.position().x(), 0.0001);
-    assertEquals(6.0302, earth.position().y(), 0.0001);
+    assertEquals(219.9184, earth.position().x(), 0.0001);
+    assertEquals(6.0295, earth.position().y(), 0.0001);
     assertEquals("2X", simulator.speedLabel());
   }
 
@@ -142,30 +142,31 @@ class PhysicsTest {
   }
 
   @Test
-  void collidingBodiesMergeWithConservedMassAreaMomentumAndCenterOfMass() {
+  void collidingBodiesBounceInelasticallyAndRemainSeparate() {
     OrbitSimulator simulator = collisionSimulator(2, 7, -2);
 
-    simulator.resolveCollisions();
+    simulator.resolveCollisions(0.5);
 
-    Body merged = singleMergedBody(simulator);
-    assertEquals("blue", merged.color());
-    assertEquals(5, merged.radiusPixels(), 0.000001);
-    assertEquals(4, merged.mass(), 0.000001);
-    assertEquals(1.75, merged.position().x(), 0.000001);
-    assertEquals(0, merged.position().y(), 0.000001);
-    assertEquals(1, merged.velocity().x(), 0.000001);
-    assertEquals(0, merged.velocity().y(), 0.000001);
+    Body alpha = simulator.findBody("alpha").orElseThrow();
+    Body beta = simulator.findBody("beta").orElseThrow();
+    assertEquals(2, simulator.bodyCount());
+    assertEquals(0.5, alpha.velocity().x(), 0.000001);
+    assertEquals(2.5, beta.velocity().x(), 0.000001);
   }
 
   @Test
-  void tickResolvesCollisionsAfterUpdatingPositions() {
+  void tickResolvesCollisionsAfterUpdatingPositionsWithoutMerging() {
     OrbitSimulator simulator = collisionSimulator(3, 10, -3);
 
     simulator.tick(1, 0);
 
-    Body merged = singleMergedBody(simulator);
-    assertEquals(4, merged.position().x(), 0.000001);
-    assertEquals(1.5, merged.velocity().x(), 0.000001);
+    Body alpha = simulator.findBody("alpha").orElseThrow();
+    Body beta = simulator.findBody("beta").orElseThrow();
+    assertEquals(2, simulator.bodyCount());
+    assertEquals(3, alpha.position().x(), 0.000001);
+    assertEquals(7, beta.position().x(), 0.000001);
+    assertEquals(0.75, alpha.velocity().x(), 0.000001);
+    assertEquals(3.75, beta.velocity().x(), 0.000001);
   }
 
   private static OrbitSimulator collisionSimulator(double alphaVelocityX, double betaX, double betaVelocityX) {
@@ -173,11 +174,6 @@ class PhysicsTest {
         new Body("alpha", "blue", 4, 3, new Vector2(0, 0), new Vector2(alphaVelocityX, 0)),
         new Body("beta", "gray", 3, 1, new Vector2(betaX, 0), new Vector2(betaVelocityX, 0))
     ));
-  }
-
-  private static Body singleMergedBody(OrbitSimulator simulator) {
-    assertEquals(1, simulator.bodyCount());
-    return simulator.bodies().getFirst();
   }
 
   @Test

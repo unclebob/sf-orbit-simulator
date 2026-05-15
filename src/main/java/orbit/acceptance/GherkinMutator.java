@@ -25,7 +25,17 @@ public class GherkinMutator {
   );
   private static final Set<String> EQUIVALENT_RESTART_KEYS = Set.of(
       "elapsed_seconds",
-      "gravity_constant"
+      "gravity_constant",
+      "substep_seconds"
+  );
+  private static final Set<String> EQUIVALENT_VERLET_ROUNDING_KEYS = Set.of(
+      "substep_seconds"
+  );
+  private static final Set<String> EQUIVALENT_FRAME_INDEPENDENCE_KEYS = Set.of(
+      "frame_count",
+      "gravity_constant",
+      "physics_seconds",
+      "substep_seconds"
   );
   private static final Set<String> EQUIVALENT_VELOCITY_PREVIEW_KEYS = Set.of(
       "mouse_x",
@@ -49,8 +59,9 @@ public class GherkinMutator {
       "second_x",
       "second_y"
   );
-  private static final Set<String> EQUIVALENT_MERGED_COLLISION_KEYS = Set.of(
+  private static final Set<String> EQUIVALENT_INELASTIC_COLLISION_KEYS = Set.of(
       "first_body",
+      "first_color",
       "second_body",
       "second_color"
   );
@@ -82,16 +93,18 @@ public class GherkinMutator {
   );
   private static final Map<String, Set<String>> EQUIVALENT_KEYS_BY_SCENARIO = Map.ofEntries(
       Map.entry("Gravity is applied between every pair of bodies", EQUIVALENT_GRAVITY_KEYS),
-      Map.entry("Pause stops physics updates", Set.of("paused_seconds")),
+      Map.entry("Physics ticks update velocity and position from gravity", EQUIVALENT_VERLET_ROUNDING_KEYS),
+      Map.entry("Pause stops physics updates", Set.of("paused_seconds", "substep_seconds")),
       Map.entry("Restart restores the initial simulation", EQUIVALENT_RESTART_KEYS),
+      Map.entry("Speed slider scales simulated time", EQUIVALENT_VERLET_ROUNDING_KEYS),
+      Map.entry("Display frame size does not change physics results", EQUIVALENT_FRAME_INDEPENDENCE_KEYS),
       Map.entry("Near-body click adds a body in circular orbit around that body", Set.of("diameter_count")),
       Map.entry("Speed slider thumb can be dragged", Set.of("start_speed")),
       Map.entry("Body radius increases with mass", EQUIVALENT_RADIUS_CORRELATION_KEYS),
       Map.entry("Dragging a body previews its velocity change", EQUIVALENT_VELOCITY_PREVIEW_KEYS),
       Map.entry("Bodies outside collision range remain separate", EQUIVALENT_SEPARATE_COLLISION_KEYS),
       Map.entry("Bodies whose rendered edges do not touch remain separate", EQUIVALENT_SCREEN_SEPARATE_COLLISION_KEYS),
-      Map.entry("Colliding bodies merge into one body", EQUIVALENT_MERGED_COLLISION_KEYS),
-      Map.entry("Bodies merge when their rendered edges touch on screen", EQUIVALENT_MERGED_COLLISION_KEYS)
+      Map.entry("Bodies collide inelastically when their rendered edges touch on screen", EQUIVALENT_INELASTIC_COLLISION_KEYS)
   );
 
   private final ValueMutator valueMutator = new ValueMutator();

@@ -71,6 +71,38 @@ class GherkinMutatorTest {
     );
   }
 
+  @Test
+  void filtersVerletSubstepValuesThatPreserveRoundedVisibleState() {
+    assertFilteredOutAndRetained(
+        "Physics ticks update velocity and position from gravity",
+        Map.of(
+            "body", "earth",
+            "seconds", "1",
+            "gravity_constant", "1",
+            "substep_seconds", "0.016667",
+            "x", "219.9796"
+        ),
+        List.of("substep_seconds"),
+        List.of("seconds", "gravity_constant", "x")
+    );
+  }
+
+  @Test
+  void filtersFrameIndependenceValuesThatPreserveTheComparisonProperty() {
+    assertFilteredOutAndRetained(
+        "Display frame size does not change physics results",
+        Map.of(
+            "body", "earth",
+            "frame_count", "1200",
+            "gravity_constant", "1",
+            "physics_seconds", "20",
+            "substep_seconds", "0.016667"
+        ),
+        List.of("frame_count", "gravity_constant", "physics_seconds", "substep_seconds"),
+        List.of("body")
+    );
+  }
+
   private static void assertFilteredOutAndRetained(
       String scenarioName,
       Map<String, String> example,
@@ -161,7 +193,7 @@ class GherkinMutatorTest {
             )
         ),
         scenario(
-            "Bodies merge when their rendered edges touch on screen",
+            "Bodies collide inelastically when their rendered edges touch on screen",
             Map.of(
                 "first_body", "alpha",
                 "first_color", "blue",
@@ -178,6 +210,7 @@ class GherkinMutatorTest {
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".second_x")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".second_vx")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[0]") && path.endsWith(".first_x")));
+    assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[1]") && path.endsWith(".first_color")));
     assertFalse(paths.stream().anyMatch(path -> path.contains("scenarios[1]") && path.endsWith(".second_color")));
     assertTrue(paths.stream().anyMatch(path -> path.contains("scenarios[1]") && path.endsWith(".first_mass")));
   }

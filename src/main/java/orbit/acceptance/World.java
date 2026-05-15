@@ -7,6 +7,7 @@ import orbit.Vector2;
 
 public class World {
   OrbitSimulator simulator;
+  OrbitSimulator otherSimulator;
   List<Body> bodies;
   List<Vector2> accelerations;
   Body addedBody;
