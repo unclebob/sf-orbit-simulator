@@ -13,6 +13,9 @@ import orbit.Vector2;
 
 public class OrbitStepHandlers implements StepHandlers {
   private static final double TOLERANCE = 0.0001;
+  private static final int MINIMUM_ZOOM_OUT = 1;
+  private static final int MAXIMUM_ZOOM_OUT = 5;
+  private static final int ZOOM_OUT_STEP = 1;
   private final Map<String, BiConsumer<World, Map<String, String>>> handlers = Map.ofEntries(
       Map.entry("the orbit simulator is opened", (world, example) -> world.simulator = OrbitSimulator.defaults()),
       Map.entry(
@@ -157,6 +160,26 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> world.simulator.setSpeedMultiplier((int) number(example, "end_speed"))
       ),
       Map.entry("the speed slider value is <end_speed>", (world, example) -> assertNumber(example, "end_speed", world.simulator.speedMultiplier())),
+      Map.entry(
+          "the zoom-out slider has minimum <minimum_zoom>, maximum <maximum_zoom>, step <zoom_step>, value <default_zoom>, and label <default_label>",
+          this::assertDefaultZoomOutSlider
+      ),
+      Map.entry(
+          "the zoom-out slider is set to <zoom_out_multiplier>",
+          (world, example) -> world.zoomOutMultiplier = (int) number(example, "zoom_out_multiplier")
+      ),
+      Map.entry(
+          "the zoom-out slider value is <zoom_out_multiplier>",
+          (world, example) -> assertNumber(example, "zoom_out_multiplier", world.zoomOutMultiplier)
+      ),
+      Map.entry(
+          "the zoom-out slider label is <zoom_label>",
+          (world, example) -> assertEquals(text(example, "zoom_label"), zoomOutLabel(world))
+      ),
+      Map.entry(
+          "the orbit view renders <screen_pixels> screen pixels for <world_units> world units",
+          this::assertOrbitViewScale
+      ),
       Map.entry(
           "the view center is <start_center_x>, <start_center_y>",
           (world, example) -> setViewCenter(world, example, "start_center_x", "start_center_y")
@@ -342,6 +365,23 @@ public class OrbitStepHandlers implements StepHandlers {
     assertNumber(example, "speed_step", OrbitSimulator.SPEED_STEP);
     assertNumber(example, "default_speed", world.simulator.speedMultiplier());
     assertEquals(text(example, "default_label"), world.simulator.speedLabel());
+  }
+
+  private void assertDefaultZoomOutSlider(World world, Map<String, String> example) {
+    assertNumber(example, "minimum_zoom", MINIMUM_ZOOM_OUT);
+    assertNumber(example, "maximum_zoom", MAXIMUM_ZOOM_OUT);
+    assertNumber(example, "zoom_step", ZOOM_OUT_STEP);
+    assertNumber(example, "default_zoom", world.zoomOutMultiplier);
+    assertEquals(text(example, "default_label"), zoomOutLabel(world));
+  }
+
+  private String zoomOutLabel(World world) {
+    return world.zoomOutMultiplier + "X";
+  }
+
+  private void assertOrbitViewScale(World world, Map<String, String> example) {
+    double screenPixels = number(example, "world_units") / world.zoomOutMultiplier;
+    assertNumber(example, "screen_pixels", screenPixels);
   }
 
   private void advanceOneFrameSimulator(World world, Map<String, String> example) {
