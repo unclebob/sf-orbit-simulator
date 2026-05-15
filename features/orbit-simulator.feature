@@ -10,7 +10,7 @@ Feature: 2D orbit simulator
   Background:
     Given the orbit simulator is opened
 
-  Scenario Outline: Default bodies are visible with physical state
+  Scenario Outline: Default bodies are visible
     Then the body <body> is visible with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>
 
     Examples:
@@ -29,7 +29,7 @@ Feature: 2D orbit simulator
       | moon         | 1            | 4                 | earth       | 100         | 12               |
       | earth        | 100          | 12                | sun         | 2000        | 36               |
 
-  Scenario Outline: Default bodies are arranged as nested orbits
+  Scenario Outline: Default orbit distances
     Then the body <orbiter> starts <distance> units from <center>
 
     Examples:
@@ -97,7 +97,7 @@ Feature: 2D orbit simulator
       | 3               | 1                | 0.016667        | 120            | -80            | 4          | 12          | Pause       | 0            | 0            | 1        | 1X         | 1         | 1X          | earth | 220 | 0 | 0  | 3.0151 |
       | 3               | 1                | 0.016667        | 120            | -80            | 4          | 12          | Pause       | 0            | 0            | 1        | 1X         | 1         | 1X          | moon  | 264 | 0 | 0  | 4.5227 |
 
-  Scenario Outline: Speed slider is available with a default multiplier
+  Scenario Outline: Speed slider defaults
     Then the speed slider has minimum <minimum_speed>, maximum <maximum_speed>, step <speed_step>, value <default_speed>, and label <default_label>
 
     Examples:
@@ -186,14 +186,14 @@ Feature: 2D orbit simulator
       | start_speed | speed_label | body_count |
       | 12          | 12X         | 3          |
 
-  Scenario Outline: Zoom-out slider is available with a default multiplier
+  Scenario Outline: Zoom slider defaults
     Then the zoom-out slider has minimum <minimum_zoom>, maximum <maximum_zoom>, step <zoom_step>, value <default_zoom>, and label <default_label>
 
     Examples:
       | minimum_zoom | maximum_zoom | zoom_step | default_zoom | default_label |
       | 1            | 5            | 1         | 1            | 1X            |
 
-  Scenario Outline: Zoom-out slider scales the orbit view
+  Scenario Outline: Zoom slider scales view
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
     When the zoom-out slider is set to <zoom_out_multiplier>
@@ -239,7 +239,7 @@ Feature: 2D orbit simulator
       | start_zoom | attempted_zoom | maximum_zoom | zoom_label |
       | 4          | 8              | 5            | 5X         |
 
-  Scenario Outline: Zoom-out slider track click changes zoom without adding a body
+  Scenario Outline: Zoom track click changes zoom only
     Given the default orbit simulator bodies are running
     When the zoom-out slider track is clicked at value <zoom_out_multiplier>
     Then the zoom-out slider value is <zoom_out_multiplier>
@@ -250,7 +250,7 @@ Feature: 2D orbit simulator
       | zoom_out_multiplier | zoom_label | body_count |
       | 3                   | 3X         | 3          |
 
-  Scenario Outline: Zoom-out slider gutter click is ignored
+  Scenario Outline: Zoom gutter click ignored
     Given the default orbit simulator bodies are running
     And the zoom-out slider is set to <start_zoom>
     When the zoom-out slider gutter is clicked
@@ -262,7 +262,7 @@ Feature: 2D orbit simulator
       | start_zoom | zoom_label | body_count |
       | 4          | 4X         | 3          |
 
-  Scenario Outline: Control row empty space click is ignored
+  Scenario Outline: Control row click ignored
     Given the default orbit simulator bodies are running
     And the speed slider is set to <start_speed>
     And the zoom-out slider is set to <start_zoom>
@@ -275,9 +275,9 @@ Feature: 2D orbit simulator
 
     Examples:
       | start_speed | speed_label | start_zoom | zoom_label | body_count |
-      | 12          | 12X         | 4          | 4X         | 3          |
+      | 100         | 100X        | 5          | 5X         | 3          |
 
-  Scenario Outline: Click just below the control row adds an orbit body
+  Scenario Outline: Below control row click adds body
     Given the default orbit simulator bodies are running
     When the empty orbit area just below the control row is clicked at position <x>, <y> using gravity constant <gravity_constant>
     Then a body <body> is added with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>
@@ -288,7 +288,7 @@ Feature: 2D orbit simulator
       | x   | y | gravity_constant | body   | color | radius_px | mass | vx | vy     | speed  | body_count |
       | 300 | 0 | 1                | body_1 | gray  | 4         | 1    | 0  | 2.5820 | 2.5820 | 4          |
 
-  Scenario Outline: Click just above the control row adds an orbit body
+  Scenario Outline: Above control row click adds body
     Given the default orbit simulator bodies are running
     When the empty orbit area just above the control row is clicked at position <x>, <y> using gravity constant <gravity_constant>
     Then a body <body> is added with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>
@@ -299,7 +299,7 @@ Feature: 2D orbit simulator
       | x   | y | gravity_constant | body   | color | radius_px | mass | vx | vy     | speed  | body_count |
       | 300 | 0 | 1                | body_1 | gray  | 4         | 1    | 0  | 2.5820 | 2.5820 | 4          |
 
-  Scenario Outline: Horizontal scroll wheel adjusts the view center left and right
+  Scenario Outline: Horizontal scroll pans view
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
     When the orbit area receives horizontal scroll input <scroll_x> with scroll scale <scroll_scale>
@@ -311,7 +311,7 @@ Feature: 2D orbit simulator
       | 0              | 0              | -30      | 1            | -30          | 0            | earth | 220    | 0      | 0  | 3.0151 |
       | 0              | 0              | 30       | 1            | 30           | 0            | earth | 220    | 0      | 0  | 3.0151 |
 
-  Scenario Outline: Vertical scroll wheel adjusts the view center up and down
+  Scenario Outline: Vertical scroll pans view
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
     When the orbit area receives vertical scroll input <scroll_y> with scroll scale <scroll_scale>
@@ -323,7 +323,7 @@ Feature: 2D orbit simulator
       | 0              | 0              | -20      | 1            | 0            | -20          | earth | 220    | 0      | 0  | 3.0151 |
       | 0              | 0              | 20       | 1            | 0            | 20           | earth | 220    | 0      | 0  | 3.0151 |
 
-  Scenario Outline: Zoomed-out scroll wheel adjusts the view center by zoomed world distance
+  Scenario Outline: Zoomed scroll pans by world distance
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
     And the zoom-out slider is set to <zoom_out_multiplier>
@@ -335,7 +335,7 @@ Feature: 2D orbit simulator
       | start_center_x | start_center_y | zoom_out_multiplier | scroll_x | scroll_y | scroll_scale | end_center_x | end_center_y | body  | body_x | body_y | vx | vy     |
       | 0              | 0              | 2                   | -30      | 20       | 1            | -60          | 40           | earth | 220    | 0      | 0  | 3.0151 |
 
-  Scenario Outline: Sun recenter button is available
+  Scenario Outline: Sun recenter button label
     Then the sun recenter button label is <recenter_label>
 
     Examples:
@@ -357,7 +357,7 @@ Feature: 2D orbit simulator
       | elapsed_seconds | gravity_constant | substep_seconds | start_center_x | start_center_y | start_zoom | sun_x  | sun_y | end_zoom | zoom_label | body | vx     | vy |
       | 1               | 1                | 0.016667        | 120            | -80            | 4          | 0.0010 | 0     | 4        | 4X         | sun  | 0.0021 | 0  |
 
-  Scenario Outline: Empty orbit area click adds a body in circular orbit around the sun
+  Scenario Outline: Empty click adds sun orbiter
     Given the default orbit simulator bodies are running
     When the empty orbit area is clicked at position <x>, <y> using gravity constant <gravity_constant>
     Then a body <body> is added with color <color>, radius <radius_px>, mass <mass>, position <x>, <y>, and velocity <vx>, <vy>
@@ -368,7 +368,7 @@ Feature: 2D orbit simulator
       | x   | y | gravity_constant | body   | color | radius_px | mass | vx | vy     | speed  | body_count |
       | 300 | 0 | 1                | body_1 | gray  | 4         | 1    | 0  | 2.5820 | 2.5820 | 4          |
 
-  Scenario Outline: Zoomed-out empty orbit area click adds a body at the zoomed world position
+  Scenario Outline: Zoomed empty click uses world position
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
     And the zoom-out slider is set to <zoom_out_multiplier>
@@ -403,7 +403,7 @@ Feature: 2D orbit simulator
       | start_center_x | start_center_y | zoom_out_multiplier | body  | screen_x | screen_y | body_x | body_y | mouse_x | mouse_y | vx | vy     |
       | 0              | 0              | 2                   | earth | 110      | -25      | 220    | 0      | 220     | -50     | 0  | 3.0151 |
 
-  Scenario Outline: Releasing a dragged body updates its velocity vector
+  Scenario Outline: Drag release updates velocity
     Given the default orbit simulator bodies are running
     When the body <body> is dragged from position <body_x>, <body_y> to mouse position <mouse_x>, <mouse_y>
     And the mouse button is released with velocity scale <velocity_scale>
@@ -413,7 +413,7 @@ Feature: 2D orbit simulator
       | body  | body_x | body_y | mouse_x | mouse_y | velocity_scale | vx | vy     |
       | earth | 220    | 0      | 220     | -50     | 0.01           | 0  | 2.5151 |
 
-  Scenario Outline: Releasing a zoomed-out body drag updates velocity toward the zoomed world position
+  Scenario Outline: Zoomed drag release updates velocity
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
     And the zoom-out slider is set to <zoom_out_multiplier>
@@ -449,7 +449,7 @@ Feature: 2D orbit simulator
       | start_center_x | start_center_y | zoom_out_multiplier | screen_x | screen_y | diameter_count | center_body | gravity_constant | x   | y  | body   | color | radius_px | mass | vx      | vy     | speed  | body_count |
       | 0              | 0              | 2                   | 110      | 30       | 4              | earth       | 1                | 220 | 60 | body_1 | gray  | 4         | 1    | -1.2910 | 3.0151 | 1.2910 | 4          |
 
-  Scenario Outline: Releasing a dragged orbiting body updates its velocity vector
+  Scenario Outline: Orbiting drag release updates velocity
     Given the default orbit simulator bodies are running
     And the body <body> orbits <center_body>
     When the body <body> is dragged from position <body_x>, <body_y> to mouse position <mouse_x>, <mouse_y>
