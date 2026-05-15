@@ -250,6 +250,18 @@ Feature: 2D orbit simulator
       | zoom_out_multiplier | zoom_label | body_count |
       | 3                   | 3X         | 3          |
 
+  Scenario Outline: Zoom-out slider gutter click is ignored
+    Given the default orbit simulator bodies are running
+    And the zoom-out slider is set to <start_zoom>
+    When the zoom-out slider gutter is clicked
+    Then the zoom-out slider value is <start_zoom>
+    And the zoom-out slider label is <zoom_label>
+    And the simulator has <body_count> bodies
+
+    Examples:
+      | start_zoom | zoom_label | body_count |
+      | 4          | 4X         | 3          |
+
   Scenario Outline: Horizontal scroll wheel adjusts the view center left and right
     Given the default orbit simulator bodies are running
     And the view center is <start_center_x>, <start_center_y>
