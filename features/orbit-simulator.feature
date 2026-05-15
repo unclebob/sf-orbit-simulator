@@ -174,6 +174,18 @@ Feature: 2D orbit simulator
       | speed_multiplier | speed_label | body_count |
       | 75               | 75X         | 3          |
 
+  Scenario Outline: Speed slider gutter click is ignored
+    Given the default orbit simulator bodies are running
+    And the speed slider is set to <start_speed>
+    When the speed slider gutter is clicked
+    Then the speed slider value is <start_speed>
+    And the speed slider label is <speed_label>
+    And the simulator has <body_count> bodies
+
+    Examples:
+      | start_speed | speed_label | body_count |
+      | 12          | 12X         | 3          |
+
   Scenario Outline: Zoom-out slider is available with a default multiplier
     Then the zoom-out slider has minimum <minimum_zoom>, maximum <maximum_zoom>, step <zoom_step>, value <default_zoom>, and label <default_label>
 
