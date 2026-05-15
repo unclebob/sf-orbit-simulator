@@ -72,6 +72,20 @@ class GherkinMutatorTest {
   }
 
   @Test
+  void filtersZoomOutSliderStartingValueThatIsReplacedByDrag() {
+    assertFilteredOutAndRetained(
+        "Zoom-out slider thumb can be dragged",
+        Map.of(
+            "start_zoom", "1",
+            "end_zoom", "4",
+            "zoom_label", "4X"
+        ),
+        List.of("start_zoom"),
+        List.of("end_zoom")
+    );
+  }
+
+  @Test
   void filtersVerletSubstepValuesThatPreserveRoundedVisibleState() {
     assertFilteredOutAndRetained(
         "Physics ticks update velocity and position from gravity",
@@ -142,6 +156,7 @@ class GherkinMutatorTest {
                 "gravity_constant", "1",
                 "start_center_x", "120",
                 "start_center_y", "-80",
+                "start_zoom", "4",
                 "x", "220"
             )
         )
@@ -152,6 +167,7 @@ class GherkinMutatorTest {
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".gravity_constant")));
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".start_center_x")));
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".start_center_y")));
+    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".start_zoom")));
     assertTrue(paths.stream().anyMatch(path -> path.endsWith(".before_pause_seconds")));
     assertTrue(paths.stream().anyMatch(path -> path.endsWith(".x")));
   }
@@ -232,6 +248,7 @@ class GherkinMutatorTest {
             Map.entry("first_y", "0"),
             Map.entry("first_vx", "0"),
             Map.entry("first_vy", "0"),
+            Map.entry("minimum_screen_distance_px", "7"),
             Map.entry("restitution", "0.5"),
             Map.entry("second_body", "beta"),
             Map.entry("second_color", "gray"),
@@ -248,6 +265,7 @@ class GherkinMutatorTest {
             "first_mass",
             "first_vx",
             "first_vy",
+            "minimum_screen_distance_px",
             "restitution",
             "second_body",
             "second_color",

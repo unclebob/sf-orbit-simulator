@@ -40,27 +40,10 @@ class OrbitSketchTest {
     setInstanceField(sketch, "zoomOutMultiplier", 2);
     setInstanceField(sketch, "viewCenter", new Vector2(10, -20));
 
-    assertEquals(0.5f, (float) instanceMethod(sketch, "viewScale").invoke(sketch));
-    Vector2 mouse = (Vector2) instanceMethod(sketch, "worldMouse").invoke(sketch);
+    assertEquals(0.5f, (float) instanceMethod("viewScale").invoke(sketch));
+    Vector2 mouse = (Vector2) instanceMethod("worldMouse").invoke(sketch);
     assertEquals(210, mouse.x(), 0.000001);
     assertEquals(-120, mouse.y(), 0.000001);
-  }
-
-  @Test
-  void restartButtonRestartsAndCentersTheViewOnTheResetSun() throws Exception {
-    OrbitSketch sketch = new OrbitSketch();
-    OrbitSimulator simulator = OrbitSimulator.defaults();
-    simulator.tick(1, 1, 0.016667);
-    setInstanceField(sketch, "simulator", simulator);
-    setInstanceField(sketch, "viewCenter", new Vector2(120, -80));
-
-    pressButton(buttons().get(1), sketch);
-
-    Vector2 viewCenter = (Vector2) instanceField(sketch, "viewCenter");
-    assertEquals(0, viewCenter.x(), 0.000001);
-    assertEquals(0, viewCenter.y(), 0.000001);
-    assertEquals(0, simulator.findBody("sun").orElseThrow().position().x(), 0.000001);
-    assertEquals(0, simulator.findBody("sun").orElseThrow().position().y(), 0.000001);
   }
 
   @Test
@@ -84,9 +67,28 @@ class OrbitSketchTest {
     setInstanceField(sketch, "zoomOutMultiplier", 2);
     setInstanceField(sketch, "viewCenter", new Vector2(10, -20));
 
-    instanceMethod(sketch, "applyViewTransform").invoke(sketch);
+    instanceMethod("applyViewTransform").invoke(sketch);
 
     assertEquals(List.of("translate 400.0 300.0", "scale 0.5", "translate -10.0 20.0"), sketch.operations);
+  }
+
+  @Test
+  void restartButtonRestartsCentersTheViewAndResetsZoom() throws Exception {
+    OrbitSketch sketch = new OrbitSketch();
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+    simulator.tick(1, 1, 0.016667);
+    setInstanceField(sketch, "simulator", simulator);
+    setInstanceField(sketch, "viewCenter", new Vector2(120, -80));
+    setInstanceField(sketch, "zoomOutMultiplier", 4);
+
+    pressButton(buttons().get(1), sketch);
+
+    Vector2 viewCenter = (Vector2) instanceField(sketch, "viewCenter");
+    assertEquals(0, viewCenter.x(), 0.000001);
+    assertEquals(0, viewCenter.y(), 0.000001);
+    assertEquals(1, instanceField(sketch, "zoomOutMultiplier"));
+    assertEquals(0, simulator.findBody("sun").orElseThrow().position().x(), 0.000001);
+    assertEquals(0, simulator.findBody("sun").orElseThrow().position().y(), 0.000001);
   }
 
   private static List<?> buttons() throws Exception {
@@ -116,7 +118,7 @@ class OrbitSketchTest {
     return accessible(field);
   }
 
-  private static Method instanceMethod(OrbitSketch sketch, String name) throws Exception {
+  private static Method instanceMethod(String name) throws Exception {
     Method method = OrbitSketch.class.getDeclaredMethod(name);
     return accessible(method);
   }

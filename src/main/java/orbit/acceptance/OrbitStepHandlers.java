@@ -169,8 +169,20 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> world.zoomOutMultiplier = (int) number(example, "zoom_out_multiplier")
       ),
       Map.entry(
+          "the zoom-out slider is set to <start_zoom>",
+          (world, example) -> world.zoomOutMultiplier = (int) number(example, "start_zoom")
+      ),
+      Map.entry(
+          "the zoom-out slider thumb is dragged to <end_zoom>",
+          (world, example) -> world.zoomOutMultiplier = (int) number(example, "end_zoom")
+      ),
+      Map.entry(
           "the zoom-out slider value is <zoom_out_multiplier>",
           (world, example) -> assertNumber(example, "zoom_out_multiplier", world.zoomOutMultiplier)
+      ),
+      Map.entry(
+          "the zoom-out slider value is <end_zoom>",
+          (world, example) -> assertNumber(example, "end_zoom", world.zoomOutMultiplier)
       ),
       Map.entry(
           "the zoom-out slider label is <zoom_label>",
@@ -468,6 +480,7 @@ public class OrbitStepHandlers implements StepHandlers {
 
   private void restartAndCenterView(World world, Map<String, String> example) {
     world.simulator.restart();
+    world.zoomOutMultiplier = MINIMUM_ZOOM_OUT;
     centerViewOnSun(world, example);
   }
 

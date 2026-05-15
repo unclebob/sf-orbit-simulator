@@ -26,6 +26,7 @@ public class GherkinMutator {
   private static final Set<String> EQUIVALENT_RESTART_KEYS = Set.of(
       "elapsed_seconds",
       "gravity_constant",
+      "start_zoom",
       "start_center_x",
       "start_center_y",
       "substep_seconds"
@@ -73,6 +74,7 @@ public class GherkinMutator {
       "first_mass",
       "first_vx",
       "first_vy",
+      "minimum_screen_distance_px",
       "restitution",
       "second_body",
       "second_color",
@@ -120,6 +122,7 @@ public class GherkinMutator {
       Map.entry("Display frame size does not change physics results", EQUIVALENT_FRAME_INDEPENDENCE_KEYS),
       Map.entry("Near-body click adds a body in circular orbit around that body", Set.of("diameter_count")),
       Map.entry("Speed slider thumb can be dragged", Set.of("start_speed")),
+      Map.entry("Zoom-out slider thumb can be dragged", Set.of("start_zoom")),
       Map.entry("Body radius increases with mass", EQUIVALENT_RADIUS_CORRELATION_KEYS),
       Map.entry("Dragging a body previews its velocity change", EQUIVALENT_VELOCITY_PREVIEW_KEYS),
       Map.entry("Bodies outside collision range remain separate", EQUIVALENT_SEPARATE_COLLISION_KEYS),
