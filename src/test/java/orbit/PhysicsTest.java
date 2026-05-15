@@ -107,11 +107,11 @@ class PhysicsTest {
   }
 
   @Test
-  void speedSliderDefaultsToOneThroughTwentyInWholeSteps() {
+  void speedSliderDefaultsToOneThroughOneHundredInWholeSteps() {
     OrbitSimulator simulator = OrbitSimulator.defaults();
 
     assertEquals(1, OrbitSimulator.MINIMUM_SPEED);
-    assertEquals(20, OrbitSimulator.MAXIMUM_SPEED);
+    assertEquals(100, OrbitSimulator.MAXIMUM_SPEED);
     assertEquals(1, OrbitSimulator.SPEED_STEP);
     assertEquals(1, simulator.speedMultiplier());
     assertEquals("1X", simulator.speedLabel());
@@ -122,11 +122,11 @@ class PhysicsTest {
     OrbitSimulator simulator = OrbitSimulator.defaults();
 
     assertThrows(IllegalArgumentException.class, () -> simulator.setSpeedMultiplier(0));
-    assertThrows(IllegalArgumentException.class, () -> simulator.setSpeedMultiplier(21));
+    assertThrows(IllegalArgumentException.class, () -> simulator.setSpeedMultiplier(101));
     simulator.setSpeedMultiplier(OrbitSimulator.MINIMUM_SPEED);
     assertEquals(1, simulator.speedMultiplier());
     simulator.setSpeedMultiplier(OrbitSimulator.MAXIMUM_SPEED);
-    assertEquals(20, simulator.speedMultiplier());
+    assertEquals(100, simulator.speedMultiplier());
   }
 
   @Test

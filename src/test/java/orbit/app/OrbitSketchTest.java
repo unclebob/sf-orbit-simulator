@@ -60,6 +60,38 @@ class OrbitSketchTest {
   }
 
   @Test
+  void speedSliderTrackClickChangesSpeedWithoutAddingABody() throws Exception {
+    OrbitSketch sketch = new OrbitSketch();
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+    setInstanceField(sketch, "simulator", simulator);
+    Object slider = staticField("SPEED_SLIDER");
+    sketch.mouseX = (int) (float) invoke(slider, "positionFor", 75, OrbitSimulator.MINIMUM_SPEED, OrbitSimulator.MAXIMUM_SPEED);
+    sketch.mouseY = (int) invoke(slider, "y");
+
+    sketch.mousePressed();
+
+    assertEquals("SPEED", instanceField(sketch, "dragAction").toString());
+    assertEquals(75, simulator.speedMultiplier());
+    assertEquals(3, simulator.bodyCount());
+  }
+
+  @Test
+  void zoomSliderTrackClickChangesZoomWithoutAddingABody() throws Exception {
+    OrbitSketch sketch = new OrbitSketch();
+    OrbitSimulator simulator = OrbitSimulator.defaults();
+    setInstanceField(sketch, "simulator", simulator);
+    Object slider = staticField("ZOOM_SLIDER");
+    sketch.mouseX = (int) (float) invoke(slider, "positionFor", 4, staticInt("MINIMUM_ZOOM_OUT"), staticInt("MAXIMUM_ZOOM_OUT"));
+    sketch.mouseY = (int) invoke(slider, "y");
+
+    sketch.mousePressed();
+
+    assertEquals("ZOOM", instanceField(sketch, "dragAction").toString());
+    assertEquals(4, instanceField(sketch, "zoomOutMultiplier"));
+    assertEquals(3, simulator.bodyCount());
+  }
+
+  @Test
   void viewTransformCentersThenScalesThenOffsetsTheWorld() throws Exception {
     RecordingSketch sketch = new RecordingSketch();
     sketch.width = 800;
@@ -143,6 +175,23 @@ class OrbitSketchTest {
   private static Object invoke(Object target, String methodName) throws Exception {
     Method method = target.getClass().getDeclaredMethod(methodName);
     return accessible(method).invoke(target);
+  }
+
+  private static Object invoke(Object target, String methodName, Object... arguments) throws Exception {
+    Method method = target.getClass().getDeclaredMethod(methodName, parameterTypes(arguments));
+    return accessible(method).invoke(target, arguments);
+  }
+
+  private static Class<?>[] parameterTypes(Object[] arguments) {
+    Class<?>[] types = new Class<?>[arguments.length];
+    for (int i = 0; i < arguments.length; i++) {
+      types[i] = primitiveType(arguments[i]);
+    }
+    return types;
+  }
+
+  private static Class<?> primitiveType(Object argument) {
+    return argument instanceof Integer ? int.class : argument.getClass();
   }
 
   private static <T extends AccessibleObject> T accessible(T object) {

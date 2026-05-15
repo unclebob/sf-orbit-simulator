@@ -27,6 +27,7 @@ public class GherkinMutator {
       "elapsed_seconds",
       "gravity_constant",
       "start_zoom",
+      "start_speed",
       "start_center_x",
       "start_center_y",
       "substep_seconds"
@@ -123,6 +124,7 @@ public class GherkinMutator {
       Map.entry("Near-body click adds a body in circular orbit around that body", Set.of("diameter_count")),
       Map.entry("Zoomed-out near-body click adds a body orbiting the zoomed world center", Set.of("diameter_count")),
       Map.entry("Speed slider thumb can be dragged", Set.of("start_speed")),
+      Map.entry("Speed slider thumb clamps when dragged beyond the maximum", Set.of("start_speed", "attempted_speed")),
       Map.entry("Zoom-out slider thumb can be dragged", Set.of("start_zoom")),
       Map.entry("Body radius increases with mass", EQUIVALENT_RADIUS_CORRELATION_KEYS),
       Map.entry("Dragging a body previews its velocity change", EQUIVALENT_VELOCITY_PREVIEW_KEYS),

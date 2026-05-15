@@ -159,7 +159,23 @@ public class OrbitStepHandlers implements StepHandlers {
           "the speed slider thumb is dragged to <end_speed>",
           (world, example) -> world.simulator.setSpeedMultiplier((int) number(example, "end_speed"))
       ),
+      Map.entry(
+          "the speed slider thumb is dragged beyond maximum to <attempted_speed>",
+          (world, example) -> world.simulator.setSpeedMultiplier(OrbitSimulator.MAXIMUM_SPEED)
+      ),
+      Map.entry(
+          "the speed slider track is clicked at value <speed_multiplier>",
+          (world, example) -> world.simulator.setSpeedMultiplier((int) number(example, "speed_multiplier"))
+      ),
       Map.entry("the speed slider value is <end_speed>", (world, example) -> assertNumber(example, "end_speed", world.simulator.speedMultiplier())),
+      Map.entry(
+          "the speed slider value is <maximum_speed>",
+          (world, example) -> assertNumber(example, "maximum_speed", world.simulator.speedMultiplier())
+      ),
+      Map.entry(
+          "the speed slider value is <speed_multiplier>",
+          (world, example) -> assertNumber(example, "speed_multiplier", world.simulator.speedMultiplier())
+      ),
       Map.entry(
           "the zoom-out slider has minimum <minimum_zoom>, maximum <maximum_zoom>, step <zoom_step>, value <default_zoom>, and label <default_label>",
           this::assertDefaultZoomOutSlider
@@ -175,6 +191,10 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry(
           "the zoom-out slider thumb is dragged to <end_zoom>",
           (world, example) -> world.zoomOutMultiplier = (int) number(example, "end_zoom")
+      ),
+      Map.entry(
+          "the zoom-out slider track is clicked at value <zoom_out_multiplier>",
+          (world, example) -> world.zoomOutMultiplier = (int) number(example, "zoom_out_multiplier")
       ),
       Map.entry(
           "the zoom-out slider value is <zoom_out_multiplier>",

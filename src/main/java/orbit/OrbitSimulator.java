@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public class OrbitSimulator {
   public static final int MINIMUM_SPEED = 1;
-  public static final int MAXIMUM_SPEED = 20;
+  public static final int MAXIMUM_SPEED = 100;
   public static final int SPEED_STEP = 1;
   public static final double DEFAULT_SUBSTEP_SECONDS = 1.0 / 60.0;
   private static final String ADDED_BODY_COLOR = "gray";

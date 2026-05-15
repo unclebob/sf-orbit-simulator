@@ -72,6 +72,21 @@ class GherkinMutatorTest {
   }
 
   @Test
+  void filtersOverMaximumSpeedSliderDragSetupValues() {
+    assertFilteredOutAndRetained(
+        "Speed slider thumb clamps when dragged beyond the maximum",
+        Map.of(
+            "start_speed", "12",
+            "attempted_speed", "125",
+            "maximum_speed", "100",
+            "speed_label", "100X"
+        ),
+        List.of("start_speed", "attempted_speed"),
+        List.of("maximum_speed", "speed_label")
+    );
+  }
+
+  @Test
   void filtersZoomOutSliderStartingValueThatIsReplacedByDrag() {
     assertFilteredOutAndRetained(
         "Zoom-out slider thumb can be dragged",
@@ -157,6 +172,7 @@ class GherkinMutatorTest {
                 "start_center_x", "120",
                 "start_center_y", "-80",
                 "start_zoom", "4",
+                "start_speed", "12",
                 "x", "220"
             )
         )
@@ -168,6 +184,7 @@ class GherkinMutatorTest {
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".start_center_x")));
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".start_center_y")));
     assertFalse(paths.stream().anyMatch(path -> path.endsWith(".start_zoom")));
+    assertFalse(paths.stream().anyMatch(path -> path.endsWith(".start_speed")));
     assertTrue(paths.stream().anyMatch(path -> path.endsWith(".before_pause_seconds")));
     assertTrue(paths.stream().anyMatch(path -> path.endsWith(".x")));
   }
