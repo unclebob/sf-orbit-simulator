@@ -152,6 +152,17 @@ Feature: 2D orbit simulator
       | start_speed | attempted_speed | maximum_speed | speed_label |
       | 12          | 125             | 100           | 100X        |
 
+  Scenario Outline: Speed slider thumb clamps when dragged below the minimum
+    Given the default orbit simulator bodies are running
+    And the speed slider is set to <start_speed>
+    When the speed slider thumb is dragged below minimum to <attempted_speed>
+    Then the speed slider value is <minimum_speed>
+    And the speed slider label is <speed_label>
+
+    Examples:
+      | start_speed | attempted_speed | minimum_speed | speed_label |
+      | 12          | 0               | 1             | 1X          |
+
   Scenario Outline: Speed slider track click changes speed without adding a body
     Given the default orbit simulator bodies are running
     When the speed slider track is clicked at value <speed_multiplier>
@@ -193,6 +204,17 @@ Feature: 2D orbit simulator
     Examples:
       | start_zoom | end_zoom | zoom_label |
       | 1          | 4        | 4X         |
+
+  Scenario Outline: Zoom-out slider thumb clamps when dragged below the minimum
+    Given the default orbit simulator bodies are running
+    And the zoom-out slider is set to <start_zoom>
+    When the zoom-out slider thumb is dragged below minimum to <attempted_zoom>
+    Then the zoom-out slider value is <minimum_zoom>
+    And the zoom-out slider label is <zoom_label>
+
+    Examples:
+      | start_zoom | attempted_zoom | minimum_zoom | zoom_label |
+      | 4          | 0              | 1            | 1X         |
 
   Scenario Outline: Zoom-out slider track click changes zoom without adding a body
     Given the default orbit simulator bodies are running
