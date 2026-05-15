@@ -164,6 +164,10 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> world.simulator.setSpeedMultiplier(OrbitSimulator.MAXIMUM_SPEED)
       ),
       Map.entry(
+          "the speed slider thumb is dragged below minimum to <attempted_speed>",
+          (world, example) -> world.simulator.setSpeedMultiplier(OrbitSimulator.MINIMUM_SPEED)
+      ),
+      Map.entry(
           "the speed slider track is clicked at value <speed_multiplier>",
           (world, example) -> world.simulator.setSpeedMultiplier((int) number(example, "speed_multiplier"))
       ),
@@ -171,6 +175,10 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry(
           "the speed slider value is <maximum_speed>",
           (world, example) -> assertNumber(example, "maximum_speed", world.simulator.speedMultiplier())
+      ),
+      Map.entry(
+          "the speed slider value is <minimum_speed>",
+          (world, example) -> assertNumber(example, "minimum_speed", world.simulator.speedMultiplier())
       ),
       Map.entry(
           "the speed slider value is <speed_multiplier>",
@@ -193,6 +201,10 @@ public class OrbitStepHandlers implements StepHandlers {
           (world, example) -> world.zoomOutMultiplier = (int) number(example, "end_zoom")
       ),
       Map.entry(
+          "the zoom-out slider thumb is dragged below minimum to <attempted_zoom>",
+          (world, example) -> world.zoomOutMultiplier = MINIMUM_ZOOM_OUT
+      ),
+      Map.entry(
           "the zoom-out slider track is clicked at value <zoom_out_multiplier>",
           (world, example) -> world.zoomOutMultiplier = (int) number(example, "zoom_out_multiplier")
       ),
@@ -203,6 +215,10 @@ public class OrbitStepHandlers implements StepHandlers {
       Map.entry(
           "the zoom-out slider value is <end_zoom>",
           (world, example) -> assertNumber(example, "end_zoom", world.zoomOutMultiplier)
+      ),
+      Map.entry(
+          "the zoom-out slider value is <minimum_zoom>",
+          (world, example) -> assertNumber(example, "minimum_zoom", world.zoomOutMultiplier)
       ),
       Map.entry(
           "the zoom-out slider label is <zoom_label>",

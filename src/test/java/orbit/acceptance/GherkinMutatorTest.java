@@ -87,6 +87,21 @@ class GherkinMutatorTest {
   }
 
   @Test
+  void filtersBelowMinimumSpeedSliderDragSetupValues() {
+    assertFilteredOutAndRetained(
+        "Speed slider thumb clamps when dragged below the minimum",
+        Map.of(
+            "start_speed", "12",
+            "attempted_speed", "0",
+            "minimum_speed", "1",
+            "speed_label", "1X"
+        ),
+        List.of("start_speed", "attempted_speed"),
+        List.of("minimum_speed", "speed_label")
+    );
+  }
+
+  @Test
   void filtersZoomOutSliderStartingValueThatIsReplacedByDrag() {
     assertFilteredOutAndRetained(
         "Zoom-out slider thumb can be dragged",
@@ -97,6 +112,21 @@ class GherkinMutatorTest {
         ),
         List.of("start_zoom"),
         List.of("end_zoom")
+    );
+  }
+
+  @Test
+  void filtersBelowMinimumZoomSliderDragSetupValues() {
+    assertFilteredOutAndRetained(
+        "Zoom-out slider thumb clamps when dragged below the minimum",
+        Map.of(
+            "start_zoom", "4",
+            "attempted_zoom", "0",
+            "minimum_zoom", "1",
+            "zoom_label", "1X"
+        ),
+        List.of("start_zoom", "attempted_zoom"),
+        List.of("minimum_zoom", "zoom_label")
     );
   }
 
