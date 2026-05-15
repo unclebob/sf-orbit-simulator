@@ -141,6 +141,17 @@ Feature: 2D orbit simulator
       | start_speed | end_speed | speed_label |
       | 1           | 12        | 12X         |
 
+  Scenario Outline: Speed slider thumb clamps when dragged beyond the maximum
+    Given the default orbit simulator bodies are running
+    And the speed slider is set to <start_speed>
+    When the speed slider thumb is dragged beyond maximum to <attempted_speed>
+    Then the speed slider value is <maximum_speed>
+    And the speed slider label is <speed_label>
+
+    Examples:
+      | start_speed | attempted_speed | maximum_speed | speed_label |
+      | 12          | 25              | 20            | 20X         |
+
   Scenario Outline: Zoom-out slider is available with a default multiplier
     Then the zoom-out slider has minimum <minimum_zoom>, maximum <maximum_zoom>, step <zoom_step>, value <default_zoom>, and label <default_label>
 
