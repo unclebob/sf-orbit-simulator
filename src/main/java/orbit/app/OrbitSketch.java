@@ -22,17 +22,22 @@ public class OrbitSketch extends PApplet {
   private static final int BUTTON_WIDTH = 100;
   private static final int BUTTON_HEIGHT = 32;
   private static final int SLIDER_X = 372;
-  private static final int SLIDER_Y = 32;
+  private static final int SPEED_SLIDER_Y = 32;
+  private static final int ZOOM_SLIDER_Y = 72;
   private static final int SLIDER_WIDTH = 220;
   private static final int SLIDER_HANDLE_RADIUS = 8;
+  private static final int MINIMUM_ZOOM_OUT = 1;
+  private static final int MAXIMUM_ZOOM_OUT = 5;
   private static final Button PAUSE_BUTTON = new Button(16, CONTROL_Y, ControlAction.PAUSE);
   private static final Button RESTART_BUTTON = new Button(128, CONTROL_Y, ControlAction.RESTART);
   private static final Button CENTER_SUN_BUTTON = new Button(240, CONTROL_Y, ControlAction.CENTER_SUN);
-  private static final Slider SPEED_SLIDER = new Slider(SLIDER_X, SLIDER_Y, SLIDER_WIDTH, SLIDER_HANDLE_RADIUS);
+  private static final Slider SPEED_SLIDER = new Slider(SLIDER_X, SPEED_SLIDER_Y, SLIDER_WIDTH, SLIDER_HANDLE_RADIUS);
+  private static final Slider ZOOM_SLIDER = new Slider(SLIDER_X, ZOOM_SLIDER_Y, SLIDER_WIDTH, SLIDER_HANDLE_RADIUS);
   private static final List<Button> BUTTONS = List.of(PAUSE_BUTTON, RESTART_BUTTON, CENTER_SUN_BUTTON);
 
   private OrbitSimulator simulator;
   private Vector2 viewCenter = new Vector2(0, 0);
+  private int zoomOutMultiplier = MINIMUM_ZOOM_OUT;
   private String draggedBodyName;
   private Vector2 dragEnd;
   private DragAction dragAction = DragAction.NONE;
@@ -55,7 +60,9 @@ public class OrbitSketch extends PApplet {
   public void draw() {
     background(10, 12, 18);
     drawControls();
-    translate(width / 2f - (float) viewCenter.x(), height / 2f - (float) viewCenter.y());
+    translate(width / 2f, height / 2f);
+    scale(viewScale());
+    translate(-(float) viewCenter.x(), -(float) viewCenter.y());
     simulator.advanceDisplayTime(1.0 / 60.0, 1.0);
     for (Body body : simulator.bodies()) {
       fillFor(body.color());
@@ -71,6 +78,11 @@ public class OrbitSketch extends PApplet {
     if (SPEED_SLIDER.contains(mouseX, mouseY)) {
       dragAction = DragAction.SPEED;
       setSpeedFromMouse();
+      return;
+    }
+    if (ZOOM_SLIDER.contains(mouseX, mouseY)) {
+      dragAction = DragAction.ZOOM;
+      setZoomFromMouse();
       return;
     }
     BUTTONS.stream()
@@ -123,11 +135,21 @@ public class OrbitSketch extends PApplet {
   }
 
   private void setSpeedFromMouse() {
-    simulator.setSpeedMultiplier(SPEED_SLIDER.speedFrom(mouseX, this));
+    simulator.setSpeedMultiplier(SPEED_SLIDER.valueFrom(mouseX, this, OrbitSimulator.MINIMUM_SPEED, OrbitSimulator.MAXIMUM_SPEED));
+  }
+
+  private void setZoomFromMouse() {
+    zoomOutMultiplier = ZOOM_SLIDER.valueFrom(mouseX, this, MINIMUM_ZOOM_OUT, MAXIMUM_ZOOM_OUT);
   }
 
   private orbit.Vector2 worldMouse() {
-    return new orbit.Vector2(mouseX - width / 2.0, mouseY - height / 2.0).plus(viewCenter);
+    return new orbit.Vector2(mouseX - width / 2.0, mouseY - height / 2.0)
+        .times(zoomOutMultiplier)
+        .plus(viewCenter);
+  }
+
+  private float viewScale() {
+    return 1.0f / zoomOutMultiplier;
   }
 
   private void adjustViewCenter(Vector2 scroll, double scrollScale) {
@@ -168,6 +190,7 @@ public class OrbitSketch extends PApplet {
     drawButton(RESTART_BUTTON, "Restart");
     drawButton(CENTER_SUN_BUTTON, "Center Sun");
     drawSpeedSlider();
+    drawZoomSlider();
   }
 
   private void drawButton(Button button, String label) {
@@ -184,10 +207,31 @@ public class OrbitSketch extends PApplet {
     line(SPEED_SLIDER.x, SPEED_SLIDER.y, SPEED_SLIDER.endX(), SPEED_SLIDER.y);
     fill(245);
     stroke(80);
-    ellipse(SPEED_SLIDER.positionFor(simulator.speedMultiplier()), SPEED_SLIDER.y, SPEED_SLIDER.diameter(), SPEED_SLIDER.diameter());
+    ellipse(
+        SPEED_SLIDER.positionFor(simulator.speedMultiplier(), OrbitSimulator.MINIMUM_SPEED, OrbitSimulator.MAXIMUM_SPEED),
+        SPEED_SLIDER.y,
+        SPEED_SLIDER.diameter(),
+        SPEED_SLIDER.diameter()
+    );
     fill(245);
     textAlign(LEFT, CENTER);
     text(simulator.speedLabel(), SPEED_SLIDER.labelX(), SPEED_SLIDER.y);
+  }
+
+  private void drawZoomSlider() {
+    stroke(180);
+    line(ZOOM_SLIDER.x, ZOOM_SLIDER.y, ZOOM_SLIDER.endX(), ZOOM_SLIDER.y);
+    fill(245);
+    stroke(80);
+    ellipse(
+        ZOOM_SLIDER.positionFor(zoomOutMultiplier, MINIMUM_ZOOM_OUT, MAXIMUM_ZOOM_OUT),
+        ZOOM_SLIDER.y,
+        ZOOM_SLIDER.diameter(),
+        ZOOM_SLIDER.diameter()
+    );
+    fill(245);
+    textAlign(LEFT, CENTER);
+    text(zoomOutMultiplier + "X", ZOOM_SLIDER.labelX(), ZOOM_SLIDER.y);
   }
 
   private record Paint(int red, int green, int blue) {
@@ -223,15 +267,15 @@ public class OrbitSketch extends PApplet {
       return pointX >= x && pointX <= endX() && Math.abs(pointY - y) <= handleRadius * 2;
     }
 
-    int speedFrom(int mouseX, PApplet sketch) {
+    int valueFrom(int mouseX, PApplet sketch, int minimum, int maximum) {
       float fraction = sketch.constrain((mouseX - x) / (float) width, 0, 1);
-      int range = OrbitSimulator.MAXIMUM_SPEED - OrbitSimulator.MINIMUM_SPEED;
-      return OrbitSimulator.MINIMUM_SPEED + Math.round(fraction * range);
+      int range = maximum - minimum;
+      return minimum + Math.round(fraction * range);
     }
 
-    float positionFor(int speed) {
-      float range = OrbitSimulator.MAXIMUM_SPEED - OrbitSimulator.MINIMUM_SPEED;
-      float fraction = (speed - OrbitSimulator.MINIMUM_SPEED) / range;
+    float positionFor(int value, int minimum, int maximum) {
+      float range = maximum - minimum;
+      float fraction = (value - minimum) / range;
       return x + fraction * width;
     }
 
@@ -285,6 +329,16 @@ public class OrbitSketch extends PApplet {
       @Override
       void drag(OrbitSketch sketch) {
         sketch.setSpeedFromMouse();
+      }
+
+      @Override
+      void release(OrbitSketch sketch) {
+      }
+    },
+    ZOOM {
+      @Override
+      void drag(OrbitSketch sketch) {
+        sketch.setZoomFromMouse();
       }
 
       @Override

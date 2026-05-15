@@ -13,6 +13,7 @@ public class World {
   Body addedBody;
   Vector2 viewCenter;
   boolean viewCenterSet;
+  int zoomOutMultiplier = 1;
   String draggedBodyName;
   Vector2 dragStart;
   Vector2 dragEnd;
